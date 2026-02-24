@@ -26,10 +26,10 @@ export const ThemeToggle: React.FC = () => {
   return (
     <button
       onClick={toggle}
-      className="inline-flex items-center px-2 py-1.5 text-sm font-medium rounded-sm text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 transition-colors"
+      className="inline-flex items-center px-2 py-1.5 text-sm font-medium rounded text-gray-600 dark:text-gray-400 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-700 transition-colors"
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
-      {theme === 'dark' ? '\u2600\uFE0F' : '\u{1F319}'}
+      {theme === 'dark' ? '○' : '●'}
     </button>
   );
 };

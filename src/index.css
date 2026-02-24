@@ -1,7 +1,53 @@
 @import "tailwindcss";
 
+/* Ensure recharts tooltips appear above all other content */
+.recharts-tooltip,
+.recharts-tooltip-wrapper,
+.recharts-default-tooltip {
+  z-index: 9999 !important;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Primary button colors */
+  --color-primary-light: #5e6aba;
+  --color-primary-dark: #333f8b;
+  --color-primary-light-hover: #525aa0;
+  --color-primary-dark-hover: #2a3570;
+
+  /* Danger button colors */
+  --color-danger-light: #895355;
+  --color-danger-dark: #6d2123;
+  --color-danger-light-hover: #7a4749;
+  --color-danger-dark-hover: #5a1a1b;
+
+  /* Input background dark mode */
+  --color-input-dark: #192028;
+}
 
 @theme {
   --font-family-sans: system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  /* Dark mode color palette - darker, more refined */
+  --color-gray-950: #0f1117;
+  --color-gray-900: #161b22;
+  --color-gray-850: #1c2128;
+  --color-gray-800: #262e38;
+  --color-gray-700: #30373f;
+
+  /* Primary button colors */
+  --color-primary-light: #5e6aba;
+  --color-primary-dark: #333f8b;
+  --color-primary-light-hover: #525aa0;
+  --color-primary-dark-hover: #2a3570;
+
+  /* Danger button colors */
+  --color-danger-light: #895355;
+  --color-danger-dark: #6d2123;
+  --color-danger-light-hover: #7a4749;
+  --color-danger-dark-hover: #5a1a1b;
+
+  /* Input background dark mode */
+  --color-input-dark: #192028;
 }

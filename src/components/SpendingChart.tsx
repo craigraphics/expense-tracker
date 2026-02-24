@@ -22,8 +22,8 @@ export const SpendingChart: React.FC<SpendingChartProps> = ({ expenses }) => {
   if (chartData.length === 0) return null;
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm p-4 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Spending by Category</h3>
+    <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded p-4">
+      <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Spending by Category</h3>
       <ResponsiveContainer width="100%" height={200}>
         <PieChart>
           <Pie

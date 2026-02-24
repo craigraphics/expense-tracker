@@ -66,22 +66,20 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
   }
 
   return (
-    <div className="">
-      <div className="flex flex-wrap ">
-        {periods.map((periodId) => (
-          <button
-            key={periodId}
-            onClick={() => onPeriodChange(periodId)}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
-              periodId === currentPeriodId
-                ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                : 'text-gray-500 dark:text-gray-400 border-transparent border-r border-gray-300 dark:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300 hover:border-b-gray-400 dark:hover:border-b-gray-600'
-            }`}
-          >
-            {formatPeriodDisplay(periodId)}
-          </button>
-        ))}
-      </div>
+    <div className="flex flex-wrap gap-2">
+      {periods.map((periodId) => (
+        <button
+          key={periodId}
+          onClick={() => onPeriodChange(periodId)}
+          className={`px-3 py-1.5 text-sm rounded transition-colors ${
+            periodId === currentPeriodId
+              ? 'bg-[#5e6aba] dark:bg-[#333f8b] text-white'
+              : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+          }`}
+        >
+          {formatPeriodDisplay(periodId)}
+        </button>
+      ))}
     </div>
   );
 };
