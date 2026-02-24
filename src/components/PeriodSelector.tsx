@@ -32,8 +32,14 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
 
         console.log('Found periods:', periodIds);
 
-        // Sort periods chronologically (newest first)
-        periodIds.sort((a, b) => b.localeCompare(a));
+        // Sort periods chronologically (newest first) using numeric comparison
+        periodIds.sort((a, b) => {
+          const [aYear, aMonth, aHalf] = a.split('-').map(Number);
+          const [bYear, bMonth, bHalf] = b.split('-').map(Number);
+          if (aYear !== bYear) return bYear - aYear;
+          if (aMonth !== bMonth) return bMonth - aMonth;
+          return bHalf - aHalf;
+        });
 
         // Ensure current period exists
         const currentExists = periodIds.includes(currentPeriodId);
@@ -68,8 +74,8 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
             onClick={() => onPeriodChange(periodId)}
             className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
               periodId === currentPeriodId
-                ? 'text-blue-400 border-blue-400 bg-blue-900/20'
-                : 'text-gray-400 border-transparent border-r border-gray-600 hover:text-gray-300 hover:border-b-gray-600'
+                ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                : 'text-gray-500 dark:text-gray-400 border-transparent border-r border-gray-300 dark:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300 hover:border-b-gray-400 dark:hover:border-b-gray-600'
             }`}
           >
             {formatPeriodDisplay(periodId)}

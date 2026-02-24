@@ -12,26 +12,15 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Debug: Check Firebase auth status
-  React.useEffect(() => {
-    console.log("Firebase Auth initialized:", !!auth);
-    console.log("Current user:", auth.currentUser);
-  }, []);
-
   const signInWithGoogle = async () => {
     try {
       setLoading(true);
-      console.log("🔥 Starting Google Sign-In...");
 
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      console.log("✅ Google Sign-In successful!");
-      console.log("User:", user.displayName, user.email);
-
       // Check if email is allowed
       if (!isEmailAllowed(user.email)) {
-        console.log("❌ Email not authorized:", user.email);
         toast({
           title: "Access Denied",
           description: `Only authorized email addresses are allowed. Your email: ${user.email}. Please contact the administrator to request access.`,
@@ -43,20 +32,18 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         return;
       }
 
-      console.log("✅ Email authorized, proceeding with login");
       onLogin();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Google Sign-In Error:", error);
-      console.error("Error code:", error.code);
-      console.error("Error message:", error.message);
 
       let errorMessage = "Failed to sign in with Google.";
+      const firebaseError = error as { code?: string };
 
-      if (error.code === 'auth/popup-closed-by-user') {
+      if (firebaseError.code === 'auth/popup-closed-by-user') {
         errorMessage = "Sign-in was cancelled.";
-      } else if (error.code === 'auth/popup-blocked') {
+      } else if (firebaseError.code === 'auth/popup-blocked') {
         errorMessage = "Pop-up was blocked by your browser. Please allow pop-ups and try again.";
-      } else if (error.code === 'auth/cancelled-popup-request') {
+      } else if (firebaseError.code === 'auth/cancelled-popup-request') {
         errorMessage = "Another sign-in is already in progress.";
       }
 
@@ -71,16 +58,16 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="p-8 flex flex-col gap-6 max-w-md mx-auto bg-gray-800 rounded-sm shadow-lg">
+    <div className="p-8 flex flex-col gap-6 max-w-md mx-auto bg-white dark:bg-gray-800 rounded-sm shadow-lg">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">Welcome Back</h2>
-        <p className="text-gray-400 text-sm mb-2">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome Back</h2>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
           Sign in with your Google account to access your expense tracker
         </p>
-        <p className="text-xs text-amber-400 bg-amber-900/20 px-3 py-1 rounded-sm">
-          🔒 Access restricted to authorized email addresses only
+        <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/20 px-3 py-1 rounded-sm">
+          Access restricted to authorized email addresses only
         </p>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
           Only configured email addresses can access this application
         </p>
       </div>
@@ -88,7 +75,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <button
         onClick={signInWithGoogle}
         disabled={loading}
-        className="flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 px-6 py-3 rounded-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 px-6 py-3 rounded-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 dark:border-transparent"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -100,7 +87,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       </button>
 
       <div className="text-center">
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-400 dark:text-gray-500">
           Secure authentication powered by Google
         </p>
       </div>

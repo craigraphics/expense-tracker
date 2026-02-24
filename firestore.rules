@@ -1,9 +1,20 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow all operations for development
-    match /{document=**} {
-      allow read, write: if true;
+    // Users can only access their own data
+    match /users/{userId}/periods/{periodId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Validate expense data on writes
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        && (!request.resource.data.keys().hasAny(['expenses']) ||
+            (request.resource.data.expenses is list
+             && request.resource.data.expenses.size() <= 200))
+        && (!request.resource.data.keys().hasAny(['bankBalance']) ||
+            (request.resource.data.bankBalance is number
+             && request.resource.data.bankBalance >= 0
+             && request.resource.data.bankBalance <= 999999.99));
     }
   }
 }
