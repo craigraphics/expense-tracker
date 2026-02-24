@@ -58,13 +58,13 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="p-8 flex flex-col gap-6 max-w-md mx-auto bg-white dark:bg-gray-800 rounded-sm shadow-lg">
+    <div className="p-8 flex flex-col gap-6 max-w-md mx-auto bg-white dark:bg-gray-900 rounded shadow-lg">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome Back</h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
           Sign in with your Google account to access your expense tracker
         </p>
-        <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/20 px-3 py-1 rounded-sm">
+        <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/20 px-3 py-1 rounded">
           Access restricted to authorized email addresses only
         </p>
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
@@ -75,7 +75,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <button
         onClick={signInWithGoogle}
         disabled={loading}
-        className="flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 px-6 py-3 rounded-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 dark:border-transparent"
+        className="flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 px-6 py-3 rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 dark:border-transparent"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

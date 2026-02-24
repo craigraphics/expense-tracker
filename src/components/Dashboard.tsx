@@ -448,35 +448,35 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-3">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100 p-3">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white dark:bg-gray-800 rounded-sm shadow-sm p-4 mb-4">
-          <div className="flex items-start justify-between mb-3">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Expense Tracker</h1>
+        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 pb-3 mb-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-[#333f8b] to-[#4a5fa8] bg-clip-text text-transparent">Expense Tracker</h1>
             <div className="flex flex-col items-end gap-2">
               <div className="flex items-center gap-3">
                 <ThemeToggle />
-                <div className="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-sm p-0.5">
+                <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded p-0.5">
                   <button
                     onClick={() => setCurrentView('expenses')}
-                    className={`px-3 py-1 text-sm rounded-sm transition-colors ${
+                    className={`px-3 py-1 text-sm rounded transition-colors ${
                       currentView === 'expenses'
-                        ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                        ? 'bg-[#5e6aba] dark:bg-[#333f8b] text-white'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                     }`}
                   >Expenses</button>
                   <button
                     onClick={() => setCurrentView('analytics')}
-                    className={`px-3 py-1 text-sm rounded-sm transition-colors ${
+                    className={`px-3 py-1 text-sm rounded transition-colors ${
                       currentView === 'analytics'
-                        ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                        ? 'bg-[#5e6aba] dark:bg-[#333f8b] text-white'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                     }`}
                   >Analytics</button>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-sm text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 transition-colors"
+                  className="inline-flex items-center px-3 py-1.5 text-sm rounded text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-700 transition-colors"
                 >
                   Sign Out
                 </button>
@@ -486,14 +486,17 @@ export const Dashboard: React.FC = () => {
               )}
             </div>
           </div>
-          {currentView === 'expenses' && (
+        </div>
+
+        {currentView === 'expenses' && (
+          <div className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 mb-4">
             <PeriodSelector
               currentPeriodId={selectedPeriodId}
               onPeriodChange={setSelectedPeriodId}
               refreshTrigger={periodRefreshTrigger}
             />
-          )}
-        </div>
+          </div>
+        )}
 
         {currentView === 'analytics' ? (
           <Analytics />
@@ -501,28 +504,28 @@ export const Dashboard: React.FC = () => {
         <div className="grid grid-cols-3 gap-4 mb-4">
           {/* Left column: Balance cards stacked vertically */}
           <div className="col-span-1 space-y-4">
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm p-4 shadow-sm">
-              <label className="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Bank Balance</label>
+            <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded p-4">
+              <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Bank Balance</label>
               <input
                 type="number"
                 value={data.bankBalance || ''}
                 onChange={handleBalanceChange}
                 max={VALIDATION.BALANCE_MAX}
-                className="text-xl font-mono p-2 w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="text-xl font-mono p-2 w-full bg-gray-100 dark:bg-[#192028] border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="0.00"
               />
             </div>
-            <div className={`rounded-sm p-4 shadow-sm border ${totalAvailable >= 0 ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700' : 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700'}`}>
-              <label className="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Total Available</label>
+            <div className={`rounded p-4 border ${totalAvailable >= 0 ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700' : 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700'}`}>
+              <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Total Available</label>
               <div className={`text-2xl font-mono font-bold ${totalAvailable >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                 {formatCurrency(totalAvailable)}
               </div>
             </div>
 
             {/* Spending Summary */}
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm p-4 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Spending Summary</h3>
-              <div className="text-lg font-mono font-bold text-gray-900 dark:text-white mb-2">
+            <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded p-4">
+              <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Spending Summary</h3>
+              <div className="text-lg font-mono font-bold text-gray-900 dark:text-gray-100 mb-2">
                 {formatCurrency(totalExpenses)}
               </div>
               {periodDiff !== null && (
@@ -538,10 +541,10 @@ export const Dashboard: React.FC = () => {
                       const colors = CATEGORY_COLORS[cat as ExpenseCategory] || CATEGORY_COLORS.Other;
                       return (
                         <div key={cat} className="flex items-center justify-between text-xs">
-                          <span className={`px-1.5 py-0.5 rounded-sm ${colors.bg} ${colors.text} border ${colors.border}`}>
+                          <span className={`px-1.5 py-0.5 rounded ${colors.bg} ${colors.text} border ${colors.border}`}>
                             {cat}
                           </span>
-                          <span className="font-mono text-gray-600 dark:text-gray-300">{formatCurrency(amount)}</span>
+                          <span className="font-mono text-gray-600 dark:text-gray-400">{formatCurrency(amount)}</span>
                         </div>
                       );
                     })}
@@ -553,29 +556,29 @@ export const Dashboard: React.FC = () => {
 
             <button
               onClick={createNewPeriod}
-              className="w-full bg-blue-600 dark:bg-blue-800 hover:bg-blue-700 dark:hover:bg-blue-900 text-white px-3 py-2 rounded-sm text-sm font-medium transition-colors mt-2"
+              className="w-full bg-[#5e6aba] dark:bg-[#333f8b] hover:bg-[#525aa0] dark:hover:bg-[#2a3570] text-white px-3 py-2 rounded text-sm transition-colors mt-2"
               title="Creates next period and copies expenses from January template of current year"
             >
               + New Period
             </button>
             <button
               onClick={() => exportExpensesCsv(data.expenses, selectedPeriodId)}
-              className="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-white px-3 py-2 rounded-sm text-sm font-medium transition-colors border border-gray-300 dark:border-gray-600"
+              className="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-100 px-3 py-2 rounded text-sm transition-colors border border-gray-300 dark:border-gray-600"
             >
               Export CSV
             </button>
             <button
               onClick={handleDeleteConfirm}
-              className="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-sm text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-950 hover:bg-red-200 dark:hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 mt-2"
+              className="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm rounded text-white bg-[#895355] dark:bg-[#6d2123] hover:bg-[#7a4749] dark:hover:bg-[#5a1a1b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#895355] mt-2"
             >
               Delete This Period
             </button>
           </div>
 
           {/* Right column: Expenses table spanning 2/3 width */}
-          <div className="col-span-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm shadow-sm overflow-hidden min-h-[600px] flex flex-col">
-          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div className="col-span-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded overflow-hidden min-h-[600px] flex flex-col">
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Expenses {selectedPeriodId.split('-')[0]}
             </h2>
             <div className="flex items-center gap-2">
@@ -583,7 +586,7 @@ export const Dashboard: React.FC = () => {
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value as ExpenseCategory | 'All')}
-                className="text-xs bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm text-gray-900 dark:text-white px-2 py-1 focus:ring-2 focus:ring-blue-500"
+                className="text-xs bg-gray-100 dark:bg-[#192028] border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 px-2 py-1 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="All">All Categories</option>
                 {EXPENSE_CATEGORIES.map((cat) => (
@@ -598,22 +601,22 @@ export const Dashboard: React.FC = () => {
               <thead className="bg-gray-100 dark:bg-gray-700 sticky top-0">
                 <tr>
                   <th
-                    className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:text-gray-900 dark:hover:text-white select-none"
+                    className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-900 dark:hover:text-white select-none"
                     onClick={() => handleSort('desc')}
                   >
                     Description{getSortIndicator('desc')}
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Category</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
                   <th
-                    className="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:text-gray-900 dark:hover:text-white select-none"
+                    className="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-900 dark:hover:text-white select-none"
                     onClick={() => handleSort('amount')}
                   >
                     Amount{getSortIndicator('amount')}
                   </th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="bg-gray-50 dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredAndSortedExpenses.map((ex) => (
                   <tr key={ex.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     {editingExpense?.id === ex.id ? (
@@ -624,7 +627,7 @@ export const Dashboard: React.FC = () => {
                             value={editDesc}
                             onChange={(e) => setEditDesc(e.target.value)}
                             maxLength={VALIDATION.DESC_MAX_LENGTH}
-                            className="w-full px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-2 py-1 bg-gray-100 dark:bg-[#192028] border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             onKeyDown={(e) => e.key === 'Enter' && saveEditing()}
                           />
                         </td>
@@ -632,7 +635,7 @@ export const Dashboard: React.FC = () => {
                           <select
                             value={editCategory}
                             onChange={(e) => setEditCategory(e.target.value as ExpenseCategory)}
-                            className="w-full px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-2 py-1 bg-gray-100 dark:bg-[#192028] border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500"
                           >
                             {EXPENSE_CATEGORIES.map((cat) => (
                               <option key={cat} value={cat}>{cat}</option>
@@ -647,20 +650,20 @@ export const Dashboard: React.FC = () => {
                             min={VALIDATION.AMOUNT_MIN}
                             max={VALIDATION.AMOUNT_MAX}
                             step="0.01"
-                            className="w-full px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm text-gray-900 dark:text-white text-right font-mono placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-2 py-1 bg-gray-100 dark:bg-[#192028] border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-right font-mono placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             onKeyDown={(e) => e.key === 'Enter' && saveEditing()}
                           />
                         </td>
                         <td className="px-4 py-3 text-right space-x-2">
                           <button
                             onClick={saveEditing}
-                            className="inline-flex items-center px-2 py-1 border border-transparent text-sm leading-4 font-medium rounded-sm text-white bg-green-800 hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            className="inline-flex items-center px-2 py-1 border border-transparent text-sm leading-4 rounded text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                           >
                             Save
                           </button>
                           <button
                             onClick={cancelEditing}
-                            className="inline-flex items-center px-2 py-1 border border-gray-600 text-sm leading-4 font-medium rounded-sm text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                            className="inline-flex items-center px-2 py-1 border border-gray-500 text-sm leading-4 rounded text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                           >
                             Cancel
                           </button>
@@ -686,7 +689,7 @@ export const Dashboard: React.FC = () => {
                                   setData(newData);
                                   updateDb(newData);
                                 }}
-                                className="text-xs px-2 py-1 rounded-sm border cursor-pointer bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="text-xs px-2 py-1 rounded border cursor-pointer bg-gray-50 dark:bg-[#192028] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                               >
                                 {EXPENSE_CATEGORIES.map((c) => (
                                   <option key={c} value={c}>{c}</option>
@@ -699,13 +702,13 @@ export const Dashboard: React.FC = () => {
                         <td className="px-4 py-3 text-right space-x-2">
                           <button
                             onClick={() => startEditing(ex)}
-                            className="inline-flex items-center px-2 py-1 border border-transparent text-sm leading-4 font-medium rounded-sm text-blue-300 bg-blue-900 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            className="inline-flex items-center px-2 py-1 border border-transparent text-sm leading-4 rounded text-white bg-[#5e6aba] dark:bg-[#333f8b] hover:bg-[#525aa0] dark:hover:bg-[#2a3570] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5e6aba]"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => deleteExpense(ex.id)}
-                            className="inline-flex items-center px-2 py-1 border border-transparent text-sm leading-4 font-medium rounded-sm text-red-400 bg-red-950 hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            className="inline-flex items-center px-2 py-1 border border-transparent text-sm leading-4 rounded text-white bg-[#895355] dark:bg-[#6d2123] hover:bg-[#7a4749] dark:hover:bg-[#5a1a1b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#895355]"
                           >
                             Delete
                           </button>
@@ -724,7 +727,7 @@ export const Dashboard: React.FC = () => {
                       value={newDesc}
                       onChange={(e) => setNewDesc(e.target.value)}
                       maxLength={VALIDATION.DESC_MAX_LENGTH}
-                      className="w-full px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-2 py-1 bg-gray-100 dark:bg-[#192028] border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       onKeyDown={(e) => e.key === 'Enter' && addExpense()}
                     />
                   </td>
@@ -732,7 +735,7 @@ export const Dashboard: React.FC = () => {
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value as ExpenseCategory)}
-                      className="w-full px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-2 py-1 bg-gray-100 dark:bg-[#192028] border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500"
                     >
                       {EXPENSE_CATEGORIES.map((cat) => (
                         <option key={cat} value={cat}>{cat}</option>
@@ -748,14 +751,14 @@ export const Dashboard: React.FC = () => {
                       min={VALIDATION.AMOUNT_MIN}
                       max={VALIDATION.AMOUNT_MAX}
                       step="0.01"
-                      className="w-full px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm text-gray-900 dark:text-white text-right font-mono placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-2 py-1 bg-gray-100 dark:bg-[#192028] border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-right font-mono placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       onKeyDown={(e) => e.key === 'Enter' && addExpense()}
                     />
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={addExpense}
-                      className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-sm text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      className="inline-flex items-center px-3 py-1 border border-transparent text-sm rounded text-white bg-[#5e6aba] dark:bg-[#333f8b] hover:bg-[#525aa0] dark:hover:bg-[#2a3570] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5e6aba]"
                     >
                       Add
                     </button>

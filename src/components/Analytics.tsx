@@ -260,16 +260,16 @@ export const Analytics: React.FC = () => {
 // ── Small helper components ──────────────────────────────────────────────────
 
 const SummaryCard: React.FC<{ label: string; value: string; sub?: string }> = ({ label, value, sub }) => (
-  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm p-4 shadow-sm">
+  <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded p-4">
     <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
-    <p className="text-lg font-bold font-mono text-gray-900 dark:text-white">{value}</p>
+    <p className="text-lg font-bold font-mono text-gray-900 dark:text-gray-100">{value}</p>
     {sub && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{sub}</p>}
   </div>
 );
 
 const ChartCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm p-4 shadow-sm">
-    <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3">{title}</h3>
+  <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded p-4">
+    <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">{title}</h3>
     {children}
   </div>
 );
