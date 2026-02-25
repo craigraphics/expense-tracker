@@ -63,8 +63,14 @@ export const Analytics: React.FC = () => {
         let total = 0;
         for (const exp of pd.expenses) {
           const cat = exp.category || 'Other';
-          byCategory[cat] = (byCategory[cat] || 0) + exp.amount;
-          total += exp.amount;
+          // Exclude Savings and Future Expenses from totals (like Dashboard does)
+          if (cat !== 'Savings') {
+            byCategory[cat] = (byCategory[cat] || 0) + exp.amount;
+            total += exp.amount;
+          } else {
+            // Still track Savings separately for reference
+            byCategory[cat] = (byCategory[cat] || 0) + exp.amount;
+          }
         }
 
         stats.push({
@@ -127,7 +133,7 @@ export const Analytics: React.FC = () => {
     }
   }
   const categoryChartData = EXPENSE_CATEGORIES
-    .filter(cat => allCategoryTotals[cat])
+    .filter(cat => allCategoryTotals[cat] && cat !== 'Savings')
     .map(cat => ({ name: cat, total: allCategoryTotals[cat] }))
     .sort((a, b) => b.total - a.total);
 
@@ -142,7 +148,7 @@ export const Analytics: React.FC = () => {
     });
 
   const usedCategories = EXPENSE_CATEGORIES.filter(
-    cat => periods.some(p => p.byCategory[cat])
+    cat => cat !== 'Savings' && periods.some(p => p.byCategory[cat])
   );
 
   return (
