@@ -83,6 +83,11 @@ export const getJanuaryTemplatePeriodId = (targetPeriodId: string): string => {
   return `${year}-1-${half}`; // January of current year, same half
 };
 
+// Helper to extract year from period ID
+export const getYearFromPeriodId = (periodId: string): number => {
+  return Number(periodId.split('-')[0]);
+};
+
 // Helper to format period ID for display (short format for tabs)
 export const formatPeriodDisplay = (periodId: string): string => {
   const [, month, half] = periodId.split('-').map(Number);

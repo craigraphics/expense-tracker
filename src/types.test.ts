@@ -4,6 +4,7 @@ import {
   getPreviousPeriodId,
   getJanuaryTemplatePeriodId,
   formatPeriodDisplay,
+  getYearFromPeriodId,
 } from './types';
 
 describe('getPeriodId', () => {
@@ -63,5 +64,13 @@ describe('formatPeriodDisplay', () => {
   it('formats second half periods', () => {
     expect(formatPeriodDisplay('2024-1-2')).toBe('Jan 2nd');
     expect(formatPeriodDisplay('2024-12-2')).toBe('Dec 2nd');
+  });
+});
+
+describe('getYearFromPeriodId', () => {
+  it('extracts year from period ID', () => {
+    expect(getYearFromPeriodId('2024-5-1')).toBe(2024);
+    expect(getYearFromPeriodId('2025-12-2')).toBe(2025);
+    expect(getYearFromPeriodId('2023-1-1')).toBe(2023);
   });
 });

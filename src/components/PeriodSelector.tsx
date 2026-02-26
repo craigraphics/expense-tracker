@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { formatPeriodDisplay } from '../types';
+import { formatPeriodDisplay, getYearFromPeriodId } from '../types';
 
 interface PeriodSelectorProps {
   currentPeriodId: string;
   onPeriodChange: (periodId: string) => void;
-  refreshTrigger?: number; // Add this to force refresh
+  refreshTrigger?: number;
+  selectedYear: number;
+  onYearsLoaded?: (years: number[]) => void;
 }
 
 export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
   currentPeriodId,
   onPeriodChange,
-  refreshTrigger
+  refreshTrigger,
+  selectedYear,
+  onYearsLoaded,
 }) => {
   const [periods, setPeriods] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,13 +28,8 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
 
       try {
         const periodsRef = collection(db, "users", user.uid, "periods");
-        console.log('Fetching periods for user:', user.uid);
-        console.log('Collection path:', periodsRef.path);
-
         const querySnapshot = await getDocs(periodsRef);
         const periodIds = querySnapshot.docs.map(doc => doc.id);
-
-        console.log('Found periods:', periodIds);
 
         // Sort periods chronologically (newest first) using numeric comparison
         periodIds.sort((a, b) => {
@@ -42,24 +41,28 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
         });
 
         // Ensure current period exists
-        const currentExists = periodIds.includes(currentPeriodId);
-        if (!currentExists) {
-          console.log('Current period does not exist, adding it:', currentPeriodId);
+        if (!periodIds.includes(currentPeriodId)) {
           periodIds.unshift(currentPeriodId);
         }
 
         setPeriods(periodIds);
+
+        // Report available years to parent
+        const years = [...new Set(periodIds.map(getYearFromPeriodId))].sort((a, b) => b - a);
+        onYearsLoaded?.(years);
       } catch (error) {
         console.error('Error fetching periods:', error);
-        console.error('Error details:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPeriods();
-  }, [currentPeriodId, refreshTrigger]);
+  }, [currentPeriodId, refreshTrigger, onYearsLoaded]);
 
+  const filteredPeriods = periods.filter(
+    (pid) => getYearFromPeriodId(pid) === selectedYear
+  );
 
   if (loading) {
     return <div className="flex justify-center p-4">Loading periods...</div>;
@@ -67,7 +70,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
 
   return (
     <div className="flex flex-wrap gap-2">
-      {periods.map((periodId) => (
+      {filteredPeriods.map((periodId) => (
         <button
           key={periodId}
           onClick={() => onPeriodChange(periodId)}
