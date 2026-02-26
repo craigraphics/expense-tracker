@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import { doc, onSnapshot, setDoc, deleteDoc, collection, getDocs, getDoc, disableNetwork, enableNetwork } from "firebase/firestore";
 import { auth, db } from '../firebase';
 import {
   type PeriodData, type Expense, type ExpenseCategory,
   EXPENSE_CATEGORIES, CATEGORY_COLORS, VALIDATION,
   getPeriodId, getPreviousPeriodId, getJanuaryTemplatePeriodId,
+  getYearFromPeriodId,
 } from '../types';
 import { PeriodSelector } from './PeriodSelector';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -19,7 +20,15 @@ type SortField = 'none' | 'desc' | 'amount';
 type SortDirection = 'asc' | 'desc';
 
 export const Dashboard: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'expenses' | 'analytics'>('expenses');
+  const hash = useSyncExternalStore(
+    (cb) => { window.addEventListener('hashchange', cb); return () => window.removeEventListener('hashchange', cb); },
+    () => window.location.hash
+  );
+  const currentView = hash === '#analytics' ? 'analytics' : 'expenses';
+
+  const navigateTo = (view: 'expenses' | 'analytics') => {
+    window.location.hash = view === 'analytics' ? '#analytics' : '#expenses';
+  };
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(getPeriodId());
   const [periodRefreshTrigger, setPeriodRefreshTrigger] = useState<number>(0);
   const { toast } = useToast();
@@ -41,6 +50,10 @@ export const Dashboard: React.FC = () => {
   // Sorting
   const [sortField, setSortField] = useState<SortField>('none');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  // Year selector
+  const [selectedYear, setSelectedYear] = useState<number>(getYearFromPeriodId(selectedPeriodId));
+  const [availableYears, setAvailableYears] = useState<number[]>([getYearFromPeriodId(selectedPeriodId)]);
 
 
   // Previous period data for comparison
@@ -87,33 +100,6 @@ export const Dashboard: React.FC = () => {
     }).catch(() => setPrevPeriodTotal(null));
   }, [selectedPeriodId]);
 
-  // Auto-create January template periods on first login
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const createJanuaryTemplates = async () => {
-      const currentYear = new Date().getFullYear();
-
-      const templates = [
-        { id: `${currentYear}-1-1`, name: 'January 1st Half' },
-        { id: `${currentYear}-1-2`, name: 'January 2nd Half' }
-      ];
-
-      for (const template of templates) {
-        const templateRef = doc(db, "users", user.uid, "periods", template.id);
-        const templateDoc = await getDocs(collection(db, "users", user.uid, "periods"));
-        const exists = templateDoc.docs.some(doc => doc.id === template.id);
-
-        if (!exists) {
-          console.log(`Creating ${template.name} template`);
-          await setDoc(templateRef, { bankBalance: 0, expenses: [] });
-        }
-      }
-    };
-
-    createJanuaryTemplates();
-  }, []);
 
   const updateDb = async (newData: PeriodData) => {
     const user = auth.currentUser;
@@ -218,6 +204,10 @@ export const Dashboard: React.FC = () => {
 
   const handleDeleteConfirm = () => {
     setShowDeleteConfirm(true);
+  };
+
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year);
   };
 
   const handleLogout = async () => {
@@ -455,10 +445,21 @@ export const Dashboard: React.FC = () => {
             <h1 className="text-2xl font-bold bg-gradient-to-r from-[#333f8b] to-[#4a5fa8] bg-clip-text text-transparent">Expense Tracker</h1>
             <div className="flex flex-col items-end gap-2">
               <div className="flex items-center gap-3">
+                <select
+                  value={selectedYear}
+                  onChange={(e) => handleYearChange(Number(e.target.value))}
+                  className="px-3 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#5e6aba] dark:focus:ring-[#333f8b]"
+                >
+                  {availableYears.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
                 <ThemeToggle />
                 <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded p-0.5">
                   <button
-                    onClick={() => setCurrentView('expenses')}
+                    onClick={() => navigateTo('expenses')}
                     className={`px-3 py-1 text-sm rounded transition-colors ${
                       currentView === 'expenses'
                         ? 'bg-[#5e6aba] dark:bg-[#333f8b] text-white'
@@ -466,7 +467,7 @@ export const Dashboard: React.FC = () => {
                     }`}
                   >Expenses</button>
                   <button
-                    onClick={() => setCurrentView('analytics')}
+                    onClick={() => navigateTo('analytics')}
                     className={`px-3 py-1 text-sm rounded transition-colors ${
                       currentView === 'analytics'
                         ? 'bg-[#5e6aba] dark:bg-[#333f8b] text-white'
@@ -494,6 +495,8 @@ export const Dashboard: React.FC = () => {
               currentPeriodId={selectedPeriodId}
               onPeriodChange={setSelectedPeriodId}
               refreshTrigger={periodRefreshTrigger}
+              selectedYear={selectedYear}
+              onYearsLoaded={setAvailableYears}
             />
           </div>
         )}

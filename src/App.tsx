@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { auth } from './firebase';
+import { doc, collection, getDocs, setDoc } from 'firebase/firestore';
+import { auth, db } from './firebase';
 import { Login } from './components/Login';
 import { Dashboard } from './components/Dashboard';
 import { Toaster } from './components/ui/toaster';
@@ -20,9 +21,23 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setLoading(false);
+
+      if (currentUser) {
+        const currentYear = new Date().getFullYear();
+        const templateIds = [`${currentYear}-1-1`, `${currentYear}-1-2`];
+        const periodsRef = collection(db, "users", currentUser.uid, "periods");
+        const snapshot = await getDocs(periodsRef);
+        const existingIds = new Set(snapshot.docs.map(d => d.id));
+
+        for (const id of templateIds) {
+          if (!existingIds.has(id)) {
+            await setDoc(doc(db, "users", currentUser.uid, "periods", id), { bankBalance: 0, expenses: [] });
+          }
+        }
+      }
     });
     return () => unsubscribe();
   }, []);
