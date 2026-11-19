@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { exportExpensesCsv } from './exportCsv';
+import { exportExpensesCsv, buildExpensesCsv } from './exportCsv';
 import type { Expense } from '../types';
 
 describe('exportExpensesCsv', () => {
@@ -28,5 +28,17 @@ describe('exportExpensesCsv', () => {
     expect(mockClick).toHaveBeenCalled();
     expect(mockCreateObjectURL).toHaveBeenCalled();
     expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:test');
+  });
+
+  it('includes a Paid column and escapes quotes', () => {
+    const csv = buildExpensesCsv([
+      { id: 1, desc: 'Rent "May"', amount: 1500, category: 'Housing', paid: true },
+      { id: 2, desc: 'Groceries', amount: 200.5, category: 'Food' },
+    ]);
+    expect(csv.split('\n')).toEqual([
+      'Description,Amount,Category,Paid',
+      '"Rent ""May""",1500.00,Housing,Yes',
+      '"Groceries",200.50,Food,No',
+    ]);
   });
 });

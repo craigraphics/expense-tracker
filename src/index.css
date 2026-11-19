@@ -1,53 +1,125 @@
 @import "tailwindcss";
 
-/* Ensure recharts tooltips appear above all other content */
-.recharts-tooltip,
-.recharts-tooltip-wrapper,
-.recharts-default-tooltip {
-  z-index: 9999 !important;
-}
-
 @custom-variant dark (&:where(.dark, .dark *));
 
-:root {
-  /* Primary button colors */
-  --color-primary-light: #5e6aba;
-  --color-primary-dark: #333f8b;
-  --color-primary-light-hover: #525aa0;
-  --color-primary-dark-hover: #2a3570;
+/*
+ * Design tokens. Components use semantic names (bg-surface, text-fg-2, border-line ...)
+ * and never raw grays, so light and dark stay consistent. Dark values are overridden below.
+ */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  /* Danger button colors */
-  --color-danger-light: #895355;
-  --color-danger-dark: #6d2123;
-  --color-danger-light-hover: #7a4749;
-  --color-danger-dark-hover: #5a1a1b;
+  --color-canvas: #f4f5f8;
+  --color-surface: #ffffff;
+  --color-surface-2: #f1f3f7;
+  --color-surface-3: #e8ebf1;
+  --color-line: #e4e7ed;
+  --color-line-strong: #d2d7e0;
 
-  /* Input background dark mode */
-  --color-input-dark: #192028;
+  --color-fg: #12151c;
+  --color-fg-2: #4a5263;
+  --color-fg-3: #858da0;
+
+  --color-accent: #5b5fd6;
+  --color-accent-hover: #4b4fc4;
+  --color-accent-soft: #ececfd;
+  --color-accent-fg: #4447b5;
+
+  --color-positive: #15803d;
+  --color-positive-soft: #e7f6ec;
+  --color-negative: #d92d20;
+  --color-negative-soft: #fdecea;
+  --color-warning: #b26a00;
+  --color-warning-soft: #fdf3df;
+
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
+  --shadow-pop: 0 12px 32px -8px rgb(16 24 40 / 0.18), 0 4px 8px -4px rgb(16 24 40 / 0.08);
 }
 
-@theme {
-  --font-family-sans: system-ui, Avenir, Helvetica, Arial, sans-serif;
+.dark {
+  --color-canvas: #0b0d12;
+  --color-surface: #12151c;
+  --color-surface-2: #181c25;
+  --color-surface-3: #20252f;
+  --color-line: #222733;
+  --color-line-strong: #2f3543;
 
-  /* Dark mode color palette - darker, more refined */
-  --color-gray-950: #0f1117;
-  --color-gray-900: #161b22;
-  --color-gray-850: #1c2128;
-  --color-gray-800: #262e38;
-  --color-gray-700: #30373f;
+  --color-fg: #e9ebf1;
+  --color-fg-2: #a3aaba;
+  --color-fg-3: #6b7387;
 
-  /* Primary button colors */
-  --color-primary-light: #5e6aba;
-  --color-primary-dark: #333f8b;
-  --color-primary-light-hover: #525aa0;
-  --color-primary-dark-hover: #2a3570;
+  --color-accent: #6b6ff0;
+  --color-accent-hover: #7d81f4;
+  --color-accent-soft: rgb(107 111 240 / 0.14);
+  --color-accent-fg: #a9acfa;
 
-  /* Danger button colors */
-  --color-danger-light: #895355;
-  --color-danger-dark: #6d2123;
-  --color-danger-light-hover: #7a4749;
-  --color-danger-dark-hover: #5a1a1b;
+  --color-positive: #4ade80;
+  --color-positive-soft: rgb(74 222 128 / 0.12);
+  --color-negative: #f87171;
+  --color-negative-soft: rgb(248 113 113 / 0.12);
+  --color-warning: #fbbf24;
+  --color-warning-soft: rgb(251 191 36 / 0.12);
 
-  /* Input background dark mode */
-  --color-input-dark: #192028;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-pop: 0 16px 40px -8px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.04);
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    background: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background: var(--color-canvas);
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+@utility num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "cv11";
+}
+
+/* Thin, theme-aware scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+/* Charts follow the theme tokens */
+.recharts-cartesian-grid line {
+  stroke: var(--color-line);
+}
+.recharts-cartesian-axis-tick text,
+.recharts-legend-item-text {
+  fill: var(--color-fg-3) !important;
+  color: var(--color-fg-2) !important;
+}
+.recharts-cartesian-axis-line,
+.recharts-cartesian-axis-tick-line {
+  stroke: var(--color-line-strong);
+}
+.recharts-surface:focus,
+.recharts-wrapper:focus,
+.recharts-sector:focus {
+  outline: none;
 }

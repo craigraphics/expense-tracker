@@ -19,5 +19,19 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // All writes must go through src/firestoreWrites.ts so read-only mode can block them
+      'no-restricted-imports': ['error', {
+        paths: [{
+          name: 'firebase/firestore',
+          importNames: ['setDoc', 'deleteDoc', 'updateDoc', 'addDoc', 'writeBatch', 'runTransaction'],
+          message: 'Import write helpers from src/firestoreWrites.ts instead.',
+        }],
+      }],
+    },
+  },
+  {
+    files: ['src/firestoreWrites.ts', 'src/utils/migrateData.ts'],
+    rules: { 'no-restricted-imports': 'off' },
   },
 ])
