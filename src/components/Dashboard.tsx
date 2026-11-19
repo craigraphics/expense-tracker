@@ -24,6 +24,7 @@ import { useAllPeriods } from '../hooks/useAllPeriods';
 import { usePredictionPrefs } from '../hooks/usePredictionPrefs';
 import { formatCurrency } from '../utils/formatCurrency';
 import { exportExpensesCsv } from '../utils/exportCsv';
+import { downloadBackup } from '../utils/backup';
 import { periodDateRange, periodTitle, yearRangeFor } from '../utils/periodFormat';
 
 const EMPTY_PERIOD: PeriodData = { bankBalance: 0, expenses: [] };
@@ -159,6 +160,18 @@ export const Dashboard: React.FC = () => {
     });
   };
 
+  const handleBackup = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      const count = await downloadBackup(user.uid);
+      toast({ title: "Backup downloaded", description: `${count} periods saved to a JSON file.` });
+    } catch (error) {
+      console.error('Error creating backup:', error);
+      toast({ title: "Couldn't create the backup", description: "Check your connection and try again.", variant: "destructive" });
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await auth.signOut();
@@ -258,6 +271,7 @@ export const Dashboard: React.FC = () => {
         onViewChange={navigateTo}
         email={auth.currentUser?.email ?? null}
         onSignOut={handleLogout}
+        onBackup={handleBackup}
       />
 
       {READ_ONLY && (

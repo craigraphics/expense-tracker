@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { LogOut, Moon, Sun, Wallet } from 'lucide-react';
+import { DatabaseBackup, LogOut, Moon, Sun, Wallet } from 'lucide-react';
 import { IconButton, Segmented } from './ui/primitives';
 
 export type View = 'expenses' | 'analytics';
@@ -33,9 +33,10 @@ interface AppHeaderProps {
   onViewChange: (view: View) => void;
   email: string | null;
   onSignOut: () => void;
+  onBackup: () => void;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ view, onViewChange, email, onSignOut }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({ view, onViewChange, email, onSignOut, onBackup }) => {
   const [theme, toggleTheme] = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -103,6 +104,17 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ view, onViewChange, email,
                   <p className="truncate text-sm font-medium text-fg">{email}</p>
                 </div>
                 <div className="my-1 h-px bg-line" />
+                <button
+                  role="menuitem"
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onBackup();
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-fg-2 hover:bg-surface-2 hover:text-fg"
+                >
+                  <DatabaseBackup className="h-4 w-4" /> Download backup
+                </button>
                 <button
                   role="menuitem"
                   type="button"
