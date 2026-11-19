@@ -21,12 +21,12 @@ React 19 + TypeScript app using Firebase (Auth + Firestore) and Vite. Styled wit
 
 ### Styling
 
-Design tokens live in `src/index.css` (`@theme` for light, `.dark` overrides): use semantic utilities such as `bg-canvas`, `bg-surface`, `bg-surface-2`, `border-line`, `text-fg`, `text-fg-2`, `text-fg-3`, `bg-accent`, `text-positive`/`text-negative` instead of raw grays, so both themes stay consistent. Use the `num` utility for amounts (tabular figures). Category colors come from `src/utils/chartColors.ts`. Dark is the default theme; `index.html` applies the saved theme before first paint.
+Design tokens live in `src/index.css` (`@theme` for light, `.dark` overrides): use semantic utilities such as `bg-canvas`, `bg-surface`, `bg-surface-2`, `border-line`, `text-fg`, `text-fg-2`, `text-fg-3`, `bg-accent`, `text-positive`/`text-negative` instead of raw grays, so both themes stay consistent. The accent is neutral ink (near-black in light, near-white in dark), so text on an accent fill uses `text-on-accent`, never `text-white`. Red/green are reserved for money status; category colors avoid red, green and purple. Radii are deliberately tiny (`rounded-xs` 2px for chips/tags, `rounded-sm` 3px for controls, `rounded-md` 4px for cards/dialogs/menus); `rounded-full` is only for true circles (avatar, spinner). Use the `num` utility for amounts (tabular figures). Category colors come from `src/utils/chartColors.ts`. Dark is the default theme; `index.html` applies the saved theme before first paint.
 
 ### Key Structure
 
 - `src/components/` — React components. `Dashboard` composes `AppHeader`, `PeriodTimeline` (PeriodNav), `PeriodSummary`, `ExpenseList` and `CategoryBreakdown`; `Analytics` is the second view; `Login` handles Google SSO
-- `src/components/ui/` — Radix dialog/toast plus shared primitives (`primitives.tsx`: Button, IconButton, Card, CategoryTag, CheckCircle, Segmented; `styles.ts`: input/select classes)
+- `src/components/ui/` — Radix dialog/toast plus shared primitives (`primitives.tsx`: Button, IconButton, Card, StatGroup/Stat, CategoryTag, Checkbox, Segmented; `styles.ts`: input/select classes)
 - `src/hooks/` — Custom hooks: `useAllPeriods` (live listener on all periods, the single source of period data), `usePredictionPrefs` (pin/ignore prefs), `use-toast`
 - `src/components/NewPeriodDialog.tsx` — Review dialog for setting up a period from predictions
 - `src/utils/predictExpenses.ts` — Pure prediction engine for new periods

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { EyeOff, Pin, RotateCcw, Sparkles } from 'lucide-react';
+import { EyeOff, Pin, RotateCcw } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import {
   Dialog,
@@ -24,7 +24,7 @@ import {
   predictExpenses,
 } from '../utils/predictExpenses';
 import { formatCurrency } from '../utils/formatCurrency';
-import { Button, CategoryTag, CheckCircle, IconButton } from './ui/primitives';
+import { Button, CategoryTag, Checkbox, IconButton } from './ui/primitives';
 import { inputClass } from './ui/styles';
 
 interface NewPeriodDialogProps {
@@ -49,9 +49,10 @@ export const NewPeriodDialog: React.FC<NewPeriodDialogProps> = ({ isOpen, onClos
 );
 
 const TIER_INFO: Record<PredictionTier, { title: string; hint: string; dot: string }> = {
-  fixed: { title: 'Fixed', hint: 'Shows up reliably with the same amount', dot: 'bg-positive' },
-  likely: { title: 'Likely', hint: 'Usually shows up, amount varies', dot: 'bg-accent' },
-  maybe: { title: 'Maybe', hint: 'Occasional, yearly, or possibly stopped', dot: 'bg-fg-3' },
+  // Neutral confidence marks: solid → muted → hollow. Green stays reserved for money status.
+  fixed: { title: 'Fixed', hint: 'Shows up reliably with the same amount', dot: 'bg-fg' },
+  likely: { title: 'Likely', hint: 'Usually shows up, amount varies', dot: 'bg-fg-3' },
+  maybe: { title: 'Maybe', hint: 'Occasional, yearly, or possibly stopped', dot: 'border border-fg-3' },
 };
 
 interface RowOverride {
@@ -136,19 +137,14 @@ const NewPeriodForm: React.FC<Omit<NewPeriodDialogProps, 'isOpen'>> = ({
     <>
       <div className="border-b border-line px-6 pb-5 pt-6">
         <DialogHeader className="pr-8">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent-fg">
-              <Sparkles className="h-[18px] w-[18px]" />
-            </span>
-            <DialogTitle>Set up {formatPeriodWithYear(targetPeriodId)}</DialogTitle>
-          </div>
+          <DialogTitle>Set up {formatPeriodWithYear(targetPeriodId)}</DialogTitle>
           <DialogDescription>
             Suggested from your last 12 months. Choose what to include and adjust any amounts. Nothing is saved until
             you create the period.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl bg-surface-2 px-4 py-3">
+        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-sm bg-surface-2 px-4 py-3">
           <label htmlFor="starting-balance" className="text-sm font-medium text-fg">
             Starting balance
           </label>
@@ -177,7 +173,7 @@ const NewPeriodForm: React.FC<Omit<NewPeriodDialogProps, 'isOpen'>> = ({
         </div>
 
         {usedFallback && (
-          <p className="mt-3 rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
+          <p className="mt-3 rounded-sm bg-warning-soft px-3 py-2 text-xs text-warning">
             Not enough history for predictions yet, so these were copied from your most recent matching period.
           </p>
         )}
@@ -193,9 +189,9 @@ const NewPeriodForm: React.FC<Omit<NewPeriodDialogProps, 'isOpen'>> = ({
           const allChecked = rows.every(isChecked);
           return (
             <section key={tier}>
-              <div className="mb-2 flex items-center justify-between gap-3">
+              <div className="mb-2.5 flex items-center justify-between gap-3">
                 <h3 className="flex items-center gap-2 text-sm font-semibold text-fg">
-                  <span className={cn('h-2 w-2 rounded-full', TIER_INFO[tier].dot)} />
+                  <span className={cn('h-2 w-2 shrink-0 rounded-xs', TIER_INFO[tier].dot)} />
                   {TIER_INFO[tier].title}
                   <span className="font-normal text-fg-3">· {TIER_INFO[tier].hint}</span>
                 </h3>
@@ -207,7 +203,7 @@ const NewPeriodForm: React.FC<Omit<NewPeriodDialogProps, 'isOpen'>> = ({
                   {allChecked ? 'Clear all' : 'Select all'}
                 </button>
               </div>
-              <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
+              <ul className="divide-y divide-line overflow-hidden rounded-md border border-line">
                 {rows.map((p) => {
                   const checked = isChecked(p);
                   return (
@@ -215,7 +211,7 @@ const NewPeriodForm: React.FC<Omit<NewPeriodDialogProps, 'isOpen'>> = ({
                       key={p.key}
                       className={cn('flex items-center gap-3 px-3 py-2.5 transition-colors sm:px-4', checked ? 'bg-surface' : 'bg-surface-2/50')}
                     >
-                      <CheckCircle
+                      <Checkbox
                         checked={checked}
                         onChange={(value) => setOverride(p.key, { checked: value })}
                         label={`Include ${p.desc}`}
@@ -268,7 +264,7 @@ const NewPeriodForm: React.FC<Omit<NewPeriodDialogProps, 'isOpen'>> = ({
             <summary className="cursor-pointer select-none text-xs font-medium text-fg-3 hover:text-fg">
               Hidden suggestions ({ignored.length})
             </summary>
-            <ul className="mt-2 divide-y divide-line rounded-xl border border-line">
+            <ul className="mt-2 divide-y divide-line rounded-md border border-line">
               {ignored.map((item) => (
                 <li key={item.key} className="flex items-center justify-between px-4 py-2 text-fg-2">
                   <span className="truncate">{item.desc}</span>

@@ -38,7 +38,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
         <div className="flex gap-4">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-negative-soft text-negative">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-negative-soft text-negative">
             <AlertTriangle className="h-5 w-5" />
           </span>
           <DialogHeader>

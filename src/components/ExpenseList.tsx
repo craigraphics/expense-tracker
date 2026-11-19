@@ -1,10 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, Check, Pencil, Plus, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Pencil, Plus, ReceiptText, Repeat, Trash2, X } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { type Expense, type ExpenseCategory, EXPENSE_CATEGORIES, VALIDATION } from '../types';
 import { formatCurrency } from '../utils/formatCurrency';
 import { categoryColor } from '../utils/chartColors';
-import { Button, Card, CheckCircle, IconButton } from './ui/primitives';
+import { Button, Card, Checkbox, IconButton } from './ui/primitives';
 import { inputClass, selectClass } from './ui/styles';
 
 type SortField = 'none' | 'desc' | 'amount';
@@ -39,14 +39,14 @@ const CategoryPicker: React.FC<{ value: ExpenseCategory; onChange: (c: ExpenseCa
   <div className={cn('relative inline-flex max-w-full', className)}>
     <span
       aria-hidden
-      className="pointer-events-none absolute left-2 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full"
+      className="pointer-events-none absolute left-2 top-1/2 h-2 w-2 -translate-y-1/2 rounded-xs"
       style={{ backgroundColor: categoryColor(value) }}
     />
     <select
       value={value}
       onChange={(e) => onChange(e.target.value as ExpenseCategory)}
       aria-label="Category"
-      className="max-w-full cursor-pointer appearance-none truncate rounded-md bg-surface-2 py-1 pl-6 pr-2 text-xs font-medium text-fg-2 transition-colors hover:bg-surface-3 hover:text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+      className="max-w-full cursor-pointer appearance-none truncate rounded-xs bg-surface-2 py-1 pl-6 pr-2 text-xs font-medium text-fg-2 transition-colors hover:bg-surface-3 hover:text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
     >
       {EXPENSE_CATEGORIES.map((c) => (
         <option key={c} value={c}>
@@ -116,7 +116,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
     <button
       type="button"
       onClick={() => handleSort(field)}
-      className={cn('inline-flex items-center gap-1 hover:text-fg', sortField === field && 'text-fg', className)}
+      className={cn('inline-flex items-center gap-1 uppercase tracking-wide hover:text-fg', sortField === field && 'text-fg', className)}
     >
       {children}
       {sortField === field && (sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
@@ -126,7 +126,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   return (
     <Card className="overflow-hidden">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-4">
         <div>
           <h2 className="text-sm font-semibold text-fg">Expenses</h2>
           <p className="mt-0.5 text-xs text-fg-3">
@@ -152,7 +152,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
       </div>
 
       {/* Composer */}
-      <form onSubmit={submitNew} className="mx-3 mb-2 flex flex-wrap items-center gap-2 rounded-lg bg-surface-2 p-2 sm:flex-nowrap">
+      <form onSubmit={submitNew} className="mx-3 mb-4 flex flex-wrap items-center gap-2 rounded-sm bg-surface-2 p-2 sm:mx-5 sm:flex-nowrap">
         <Plus className="ml-1 hidden h-4 w-4 shrink-0 text-fg-3 sm:block" />
         <input
           ref={descRef}
@@ -161,7 +161,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
           maxLength={VALIDATION.DESC_MAX_LENGTH}
           placeholder="Add an expense…"
           aria-label="New expense description"
-          className="h-9 min-w-0 flex-1 basis-full rounded-lg bg-transparent px-2 text-sm text-fg placeholder:text-fg-3 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/30 sm:basis-auto"
+          className="h-9 min-w-0 flex-1 basis-full rounded-xs bg-transparent px-2 text-sm text-fg placeholder:text-fg-3 focus:bg-surface focus:outline-none focus:ring-1 focus:ring-line-strong sm:basis-auto"
         />
         <select
           value={draft.category}
@@ -197,22 +197,22 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
 
       {expenses.length === 0 ? (
         <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-accent-fg">
-            <Sparkles className="h-5 w-5" />
+          <span className="flex h-10 w-10 items-center justify-center rounded-sm border border-line-strong text-fg-3">
+            <ReceiptText className="h-5 w-5" />
           </span>
           <div>
             <p className="text-sm font-medium text-fg">No expenses yet</p>
             <p className="mt-1 text-sm text-fg-3">Add one above, or start from your usual expenses.</p>
           </div>
           <Button variant="secondary" size="sm" onClick={onFillPredictions}>
-            <Sparkles className="h-3.5 w-3.5" /> Fill from predictions
+            <Repeat className="h-3.5 w-3.5" /> Fill from predictions
           </Button>
         </div>
       ) : (
         <>
           {/* Column headers */}
-          <div className={cn(rowGrid, 'border-b border-line px-5 py-2 text-xs font-medium text-fg-3')}>
-            <span className="w-5" />
+          <div className={cn(rowGrid, 'border-y border-line px-5 py-2.5 text-[11px] font-medium uppercase tracking-wide text-fg-3')}>
+            <span className="w-[18px]" />
             {sortHeader('desc', 'Description')}
             <span className="hidden sm:block">Category</span>
             {sortHeader('amount', 'Amount', 'justify-self-end')}
@@ -224,8 +224,8 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
               const editing = editingId === exp.id;
               if (editing) {
                 return (
-                  <li key={exp.id} className={cn(rowGrid, 'bg-accent-soft/40 px-5 py-2')}>
-                    <span className="w-5" />
+                  <li key={exp.id} className={cn(rowGrid, 'bg-surface-2 px-5 py-2')}>
+                    <span className="w-[18px]" />
                     <input
                       autoFocus
                       value={editDraft.desc}
@@ -288,9 +288,9 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
               return (
                 <li
                   key={exp.id}
-                  className={cn(rowGrid, 'group px-5 py-2.5 transition-colors hover:bg-surface-2/60')}
+                  className={cn(rowGrid, 'group px-5 py-2 transition-colors hover:bg-surface-2/60')}
                 >
-                  <CheckCircle
+                  <Checkbox
                     checked={!!exp.paid}
                     onChange={(paid) => onUpdate(exp.id, { paid })}
                     label={exp.paid ? `Mark ${exp.desc} as unpaid` : `Mark ${exp.desc} as paid`}
@@ -335,13 +335,13 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
           </ul>
 
           {/* Footer total */}
-          <div className={cn(rowGrid, 'border-t border-line bg-surface-2/50 px-5 py-3')}>
-            <span className="w-5" />
-            <span className="text-xs font-medium text-fg-3">
+          <div className={cn(rowGrid, 'border-t border-line bg-surface-2/50 px-5 py-3.5')}>
+            <span className="w-[18px]" />
+            <span className="text-sm font-medium text-fg-2">
               {filter === 'All' ? 'Total' : `${filter} total`}
             </span>
             <span className="hidden sm:block" />
-            <span className="num justify-self-end text-sm font-semibold text-fg">{formatCurrency(shownTotal)}</span>
+            <span className="num justify-self-end text-base font-semibold text-fg">{formatCurrency(shownTotal)}</span>
             <span className="hidden sm:block" />
           </div>
         </>
