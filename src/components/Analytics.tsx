@@ -1,385 +1,431 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import React, { useState } from 'react';
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell,
+  Area, AreaChart, Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
-import { auth, db } from '../firebase';
-import type { PeriodData } from '../types';
-import { EXPENSE_CATEGORIES } from '../types';
-import { CHART_COLORS } from '../utils/chartColors';
+import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/utils/cn';
+import { EXPENSE_CATEGORIES, type ExpenseCategory } from '../types';
+import type { PeriodRecord } from '../hooks/useAllPeriods';
 import { formatCurrency } from '../utils/formatCurrency';
+import { categoryColor } from '../utils/chartColors';
+import { summarizeYear, topExpensesOf } from '../utils/yearSummary';
+import { MONTHS } from '../utils/periodFormat';
+import { Card, CardHeader, CategoryDot, IconButton, Segmented } from './ui/primitives';
 
-type FilterMode = 'all' | 'year' | 'last6' | 'last12';
+type FilterMode = 'year' | 'last6' | 'last12' | 'all';
 
-interface PeriodStat {
-  id: string;
-  label: string;
-  year: number;
-  month: number;
-  half: number;
-  total: number;
-  byCategory: Record<string, number>;
+interface AnalyticsProps {
+  periods: PeriodRecord[];
+  loading: boolean;
 }
 
-const TOOLTIP_STYLE = {
-  backgroundColor: '#ffffff',
-  border: '1px solid #e5e7eb',
-  borderRadius: '4px',
-  color: '#1f2937',
-  fontSize: '12px',
-  fontWeight: '500' as const,
-  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+// Validated pair (light + dark surfaces): 1st half / 2nd half
+const HALF_COLORS = { first: '#7480cf', second: '#c2850c' };
+const LINE_COLOR = '#6b6ff0';
+
+const TOOLTIP_STYLE: React.CSSProperties = {
+  backgroundColor: 'var(--color-surface)',
+  border: '1px solid var(--color-line)',
+  borderRadius: 10,
+  color: 'var(--color-fg)',
+  fontSize: 12,
+  boxShadow: 'var(--shadow-pop)',
+  padding: '8px 12px',
 };
 
-const yFmt = (v: number) => v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${v.toFixed(0)}`;
+const compact = (v: number) => (Math.abs(v) >= 1000 ? `$${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}k` : `$${Math.round(v)}`);
 
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const spentOf = (p: PeriodRecord) =>
+  p.data.expenses.reduce((s, e) => s + ((e.category || 'Other') === 'Savings' ? 0 : e.amount), 0);
+const savedOf = (p: PeriodRecord) =>
+  p.data.expenses.reduce((s, e) => s + ((e.category || 'Other') === 'Savings' ? e.amount : 0), 0);
 
-function periodLabel(id: string): string {
-  const [, month, half] = id.split('-').map(Number);
-  return `${MONTH_NAMES[month - 1]} ${half === 1 ? '1st' : '2nd'}`;
-}
+const shortLabel = (p: PeriodRecord, withYear: boolean) =>
+  `${MONTHS[p.month - 1]} ${p.half === 1 ? '1' : '2'}${withYear ? ` '${String(p.year).slice(2)}` : ''}`;
 
-function periodLabelWithYear(id: string): string {
-  const [year, month, half] = id.split('-').map(Number);
-  return `${MONTH_NAMES[month - 1]} ${half === 1 ? '1st' : '2nd'} '${String(year).slice(2)}`;
-}
+const longLabel = (p: PeriodRecord) => `${MONTHS[p.month - 1]} ${p.half === 1 ? '1st' : '2nd'} half ${p.year}`;
 
-export const Analytics: React.FC = () => {
-  const [periods, setPeriods] = useState<PeriodStat[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filterMode, setFilterMode] = useState<FilterMode>('all');
-  const [filterYear, setFilterYear] = useState<number>(new Date().getFullYear());
+const pct = (change: number | null) =>
+  change === null ? '–' : `${change > 0 ? '+' : ''}${Math.round(change * 100)}%`;
 
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
+const KPI: React.FC<{ label: string; value: string; footer?: React.ReactNode }> = ({ label, value, footer }) => (
+  <Card className="flex flex-col gap-1 px-5 py-4">
+    <span className="text-xs font-medium text-fg-3">{label}</span>
+    <span className="num text-2xl font-semibold tracking-tight text-fg">{value}</span>
+    {footer && <span className="mt-auto pt-1 text-xs text-fg-3">{footer}</span>}
+  </Card>
+);
 
-    getDocs(collection(db, 'users', user.uid, 'periods')).then((snap) => {
-      const stats: PeriodStat[] = [];
-
-      snap.docs.forEach((d) => {
-        const [yearStr, monthStr, halfStr] = d.id.split('-');
-        const year = Number(yearStr);
-        const month = Number(monthStr);
-        const half = Number(halfStr);
-        if (isNaN(year) || isNaN(month) || isNaN(half)) return;
-
-        const pd = d.data() as PeriodData;
-        const byCategory: Record<string, number> = {};
-        let total = 0;
-        for (const exp of pd.expenses) {
-          const cat = exp.category || 'Other';
-          if (cat !== 'Savings') {
-            byCategory[cat] = (byCategory[cat] || 0) + exp.amount;
-            total += exp.amount;
-          } else {
-            byCategory[cat] = (byCategory[cat] || 0) + exp.amount;
-          }
-        }
-
-        stats.push({
-          id: d.id,
-          label: periodLabel(d.id),
-          year,
-          month,
-          half,
-          total,
-          byCategory,
-        });
-      });
-
-      stats.sort((a, b) =>
-        a.year !== b.year ? a.year - b.year :
-        a.month !== b.month ? a.month - b.month :
-        a.half - b.half
-      );
-
-      setPeriods(stats);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
-
-  const availableYears = useMemo(
-    () => [...new Set(periods.map(p => p.year))].sort((a, b) => b - a),
-    [periods]
+const ChangeChip: React.FC<{ change: number | null }> = ({ change }) => {
+  if (change === null || Math.abs(change) < 0.005) return null;
+  const up = change > 0;
+  return (
+    <span className={cn('inline-flex items-center gap-0.5 rounded px-1 py-px text-xs font-medium', up ? 'bg-negative-soft text-negative' : 'bg-positive-soft text-positive')}>
+      {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+      {pct(change)}
+    </span>
   );
+};
 
-  const filteredPeriods = useMemo(() => {
-    switch (filterMode) {
-      case 'year':
-        return periods.filter(p => p.year === filterYear);
-      case 'last6':
-      case 'last12': {
-        const now = new Date();
-        const monthsBack = filterMode === 'last6' ? 6 : 12;
-        const cutoff = new Date(now.getFullYear(), now.getMonth() - monthsBack, 1);
-        return periods.filter(p => {
-          const periodDate = new Date(p.year, p.month - 1, p.half === 1 ? 1 : 16);
-          return periodDate >= cutoff;
-        });
-      }
-      default:
-        return periods;
-    }
-  }, [periods, filterMode, filterYear]);
-
-  const filterLabel = useMemo(() => {
-    switch (filterMode) {
-      case 'year': return String(filterYear);
-      case 'last6': return 'Last 6 Months';
-      case 'last12': return 'Last 12 Months';
-      default: return 'All-Time';
-    }
-  }, [filterMode, filterYear]);
-
-  // Use year-qualified labels when filter spans multiple years
-  const spansMultipleYears = useMemo(() => {
-    const years = new Set(filteredPeriods.map(p => p.year));
-    return years.size > 1;
-  }, [filteredPeriods]);
-
-  const getLabel = (p: PeriodStat) =>
-    spansMultipleYears ? periodLabelWithYear(p.id) : p.label;
+export const Analytics: React.FC<AnalyticsProps> = ({ periods: records, loading }) => {
+  const thisYear = new Date().getFullYear();
+  const [filterMode, setFilterMode] = useState<FilterMode>('year');
+  const [filterYear, setFilterYear] = useState<number>(thisYear);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-500 dark:text-gray-400">
-        Loading analytics…
+      <div className="space-y-5" aria-busy="true" aria-label="Loading">
+        <div className="h-9 w-80 animate-pulse rounded-lg bg-surface-2" />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => <div key={i} className="h-[104px] animate-pulse rounded-xl bg-surface-2" />)}
+        </div>
+        <div className="h-72 animate-pulse rounded-xl bg-surface-2" />
       </div>
     );
   }
 
-  if (periods.length === 0) {
+  // Periods with no expenses (e.g. auto-created ones) would show as $0, so skip them
+  const tracked = records.filter((r) => r.data.expenses.length > 0);
+  if (tracked.length === 0) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-500 dark:text-gray-400">
-        No period data found.
-      </div>
+      <Card className="px-6 py-16 text-center text-sm text-fg-3">
+        No data yet. Analytics appear once you've tracked a period.
+      </Card>
     );
   }
 
-  // Derived data from filtered periods
-  const fp = filteredPeriods;
-  const firstHalves = fp.filter(p => p.half === 1);
-  const secondHalves = fp.filter(p => p.half === 2);
+  const years = [...new Set(tracked.map((p) => p.year))].sort((a, b) => a - b);
+  const year = Math.min(Math.max(filterYear, years[0]), years[years.length - 1]);
 
-  const avg1st = firstHalves.length > 0
-    ? firstHalves.reduce((s, p) => s + p.total, 0) / firstHalves.length
-    : 0;
-  const avg2nd = secondHalves.length > 0
-    ? secondHalves.reduce((s, p) => s + p.total, 0) / secondHalves.length
-    : 0;
+  const now = new Date();
+  const fp = tracked.filter((p) => {
+    if (filterMode === 'year') return p.year === year;
+    if (filterMode === 'all') return true;
+    const cutoff = new Date(now.getFullYear(), now.getMonth() - (filterMode === 'last6' ? 6 : 12), 1);
+    return new Date(p.year, p.month - 1, p.half === 1 ? 1 : 16) >= cutoff;
+  });
+  const multiYear = new Set(fp.map((p) => p.year)).size > 1;
+  const yearSummary = filterMode === 'year' ? summarizeYear(records, year) : null;
 
-  const highest = fp.length > 0 ? fp.reduce((a, b) => a.total >= b.total ? a : b) : null;
-  const lowest = fp.length > 0 ? fp.reduce((a, b) => a.total <= b.total ? a : b) : null;
+  // KPIs
+  const totalSpent = fp.reduce((s, p) => s + spentOf(p), 0);
+  const totalSaved = fp.reduce((s, p) => s + savedOf(p), 0);
+  const avgOf = (list: PeriodRecord[]) => (list.length ? list.reduce((s, p) => s + spentOf(p), 0) / list.length : 0);
+  const firsts = fp.filter((p) => p.half === 1);
+  const seconds = fp.filter((p) => p.half === 2);
+  const avgPerPeriod = avgOf(fp);
+  const highest = fp.reduce<PeriodRecord | null>((a, b) => (!a || spentOf(b) > spentOf(a) ? b : a), null);
+  const lowest = fp.reduce<PeriodRecord | null>((a, b) => (!a || spentOf(b) < spentOf(a) ? b : a), null);
 
-  // Category totals
-  const categoryTotals: Record<string, number> = {};
+  // Categories: totals, per-period average, per-half averages
+  const catTotals = new Map<ExpenseCategory, { total: number; first: number; second: number }>();
   for (const p of fp) {
-    for (const [cat, amt] of Object.entries(p.byCategory)) {
-      categoryTotals[cat] = (categoryTotals[cat] || 0) + amt;
+    for (const e of p.data.expenses) {
+      const cat = e.category || 'Other';
+      if (cat === 'Savings') continue;
+      const entry = catTotals.get(cat) ?? { total: 0, first: 0, second: 0 };
+      entry.total += e.amount;
+      if (p.half === 1) entry.first += e.amount;
+      else entry.second += e.amount;
+      catTotals.set(cat, entry);
     }
   }
-  const categoryChartData = EXPENSE_CATEGORIES
-    .filter(cat => categoryTotals[cat] && cat !== 'Savings')
-    .map(cat => ({ name: cat, total: categoryTotals[cat] }))
+  const categories = EXPENSE_CATEGORIES.filter((c) => catTotals.has(c))
+    .map((c) => {
+      const t = catTotals.get(c)!;
+      const prev = yearSummary?.byCategory.find((b) => b.category === c);
+      return {
+        category: c,
+        total: t.total,
+        perPeriod: t.total / fp.length,
+        avgFirst: firsts.length ? t.first / firsts.length : 0,
+        avgSecond: seconds.length ? t.second / seconds.length : 0,
+        change: prev?.change ?? null,
+      };
+    })
     .sort((a, b) => b.total - a.total);
+  const maxCat = categories[0]?.total ?? 0;
+  const halfData = categories.map((c) => ({ name: c.category, first: c.avgFirst, second: c.avgSecond }));
 
-  // Stacked bar chart data helpers
-  const makeStackedData = (subset: PeriodStat[]) =>
-    subset.map(p => {
-      const row: Record<string, number | string> = { label: getLabel(p) };
-      for (const cat of EXPENSE_CATEGORIES) {
-        row[cat] = p.byCategory[cat] || 0;
-      }
-      return row;
-    });
+  const timeline = fp.map((p) => ({ label: shortLabel(p, multiYear), full: longLabel(p), spent: spentOf(p) }));
+  const topExpenses = topExpensesOf(fp);
+  const hasPrevYear = !!yearSummary?.prevYear;
 
-  const usedCategories = EXPENSE_CATEGORIES.filter(
-    cat => cat !== 'Savings' && fp.some(p => p.byCategory[cat])
-  );
-
-  const btnClass = (active: boolean) =>
-    `px-3 py-1.5 text-sm rounded transition-colors ${
-      active
-        ? 'bg-[#5e6aba] dark:bg-[#333f8b] text-white'
-        : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-    }`;
+  const rangeLabel =
+    filterMode === 'year' ? String(year) : filterMode === 'all' ? 'All time' : filterMode === 'last6' ? 'Last 6 months' : 'Last 12 months';
 
   return (
-    <div className="space-y-6">
-      {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-2">
-        <button className={btnClass(filterMode === 'all')} onClick={() => setFilterMode('all')}>
-          All Time
-        </button>
-        <div className="flex items-center gap-1">
-          <button className={btnClass(filterMode === 'year')} onClick={() => setFilterMode('year')}>
-            Year
-          </button>
-          {filterMode === 'year' && (
-            <select
-              value={filterYear}
-              onChange={(e) => setFilterYear(Number(e.target.value))}
-              className="px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#5e6aba] dark:focus:ring-[#333f8b]"
-            >
-              {availableYears.map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-          )}
+    <div className="space-y-5">
+      {/* Title + range */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-fg sm:text-2xl">
+            {filterMode === 'year' ? `${year} in review` : 'Analytics'}
+          </h1>
+          <p className="text-sm text-fg-3">
+            {fp.length} {fp.length === 1 ? 'period' : 'periods'} tracked · {rangeLabel}
+          </p>
         </div>
-        <button className={btnClass(filterMode === 'last6')} onClick={() => setFilterMode('last6')}>
-          Last 6 Mo
-        </button>
-        <button className={btnClass(filterMode === 'last12')} onClick={() => setFilterMode('last12')}>
-          Last 12 Mo
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {filterMode === 'year' && (
+            <div className="flex items-center gap-0.5">
+              <IconButton label="Previous year" disabled={year <= years[0]} onClick={() => setFilterYear(year - 1)}>
+                <ChevronLeft />
+              </IconButton>
+              <span className="num w-11 text-center text-sm font-semibold text-fg">{year}</span>
+              <IconButton label="Next year" disabled={year >= years[years.length - 1]} onClick={() => setFilterYear(year + 1)}>
+                <ChevronRight />
+              </IconButton>
+            </div>
+          )}
+          <Segmented
+            value={filterMode}
+            onChange={setFilterMode}
+            options={[
+              { value: 'year', label: 'Year' },
+              { value: 'last6', label: '6 months' },
+              { value: 'last12', label: '12 months' },
+              { value: 'all', label: 'All time' },
+            ]}
+          />
+        </div>
       </div>
 
       {fp.length === 0 ? (
-        <div className="flex items-center justify-center py-20 text-gray-500 dark:text-gray-400">
-          No data for the selected range.
-        </div>
+        <Card className="px-6 py-16 text-center text-sm text-fg-3">No data for this range.</Card>
       ) : (
         <>
-          {/* Summary cards */}
-          <div className="grid grid-cols-5 gap-3">
-            <SummaryCard label="Periods Tracked" value={String(fp.length)} />
-            <SummaryCard label={`Avg 1st-Half`} value={formatCurrency(avg1st)} sub={filterLabel} />
-            <SummaryCard label={`Avg 2nd-Half`} value={formatCurrency(avg2nd)} sub={filterLabel} />
-            {highest && (
-              <SummaryCard
-                label="Highest Period"
-                value={formatCurrency(highest.total)}
-                sub={getLabel(highest)}
-              />
-            )}
-            {lowest && (
-              <SummaryCard
-                label="Lowest Period"
-                value={formatCurrency(lowest.total)}
-                sub={getLabel(lowest)}
-              />
-            )}
+          {/* KPIs */}
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <KPI
+              label="Spent"
+              value={formatCurrency(totalSpent)}
+              footer={
+                yearSummary?.prevYear ? (
+                  <span className="inline-flex items-center gap-1">
+                    <ChangeChip change={yearSummary.spentChange} /> per period vs {year - 1}
+                  </span>
+                ) : (
+                  `${formatCurrency(avgPerPeriod)} per period`
+                )
+              }
+            />
+            <KPI
+              label="Saved"
+              value={formatCurrency(totalSaved)}
+              footer={totalSpent > 0 ? `${Math.round((totalSaved / totalSpent) * 100)}% of what you spent` : undefined}
+            />
+            <KPI
+              label="Average 1st half"
+              value={formatCurrency(avgOf(firsts))}
+              footer={(() => {
+                const d = avgOf(firsts) - avgOf(seconds);
+                if (!firsts.length || !seconds.length || Math.abs(d) < 0.005) return undefined;
+                return `${formatCurrency(Math.abs(d))} ${d > 0 ? 'more' : 'less'} than the 2nd half`;
+              })()}
+            />
+            <KPI
+              label="Average 2nd half"
+              value={formatCurrency(avgOf(seconds))}
+              footer={
+                highest && lowest
+                  ? `Range ${compact(spentOf(lowest))}–${compact(spentOf(highest))} per period`
+                  : undefined
+              }
+            />
           </div>
 
-          {/* Total Spending Over Time */}
-          <ChartCard title={`Spending Over Time (${filterLabel})`}>
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={fp.map(p => ({ label: getLabel(p), total: p.total }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis tickFormatter={yFmt} tick={{ fontSize: 11 }} width={55} />
-                <Tooltip
-                  contentStyle={TOOLTIP_STYLE}
-                  formatter={(v) => [formatCurrency(Number(v)), 'Total']}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="total"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartCard>
+          {/* Spending over time */}
+          <Card>
+            <CardHeader
+              title="Spending per period"
+              subtitle={`Excludes savings · dashed line is the ${formatCurrency(avgPerPeriod)} average`}
+              action={
+                highest && (
+                  <span className="hidden text-xs text-fg-3 sm:block">
+                    Peak <span className="num font-medium text-fg">{formatCurrency(spentOf(highest))}</span> · {longLabel(highest)}
+                  </span>
+                )
+              }
+            />
+            <div className="px-2 pb-3">
+              <ResponsiveContainer width="100%" height={240}>
+                <AreaChart data={timeline} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="spentFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={LINE_COLOR} stopOpacity={0.28} />
+                      <stop offset="100%" stopColor={LINE_COLOR} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={16} />
+                  <YAxis tickFormatter={compact} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={48} />
+                  <ReferenceLine y={avgPerPeriod} stroke="var(--color-fg-3)" strokeDasharray="4 4" />
+                  <Tooltip
+                    contentStyle={TOOLTIP_STYLE}
+                    cursor={{ stroke: 'var(--color-line-strong)' }}
+                    labelFormatter={(_, payload) => payload?.[0]?.payload?.full ?? ''}
+                    formatter={(v) => [formatCurrency(Number(v)), 'Spent']}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="spent"
+                    stroke={LINE_COLOR}
+                    strokeWidth={2}
+                    fill="url(#spentFill)"
+                    dot={false}
+                    activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--color-surface)' }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
 
-          {/* Same-Half Comparison */}
-          <div className="grid grid-cols-2 gap-4">
-            <ChartCard title={`1st-Half by Category (${filterLabel})`}>
-              {firstHalves.length < 2 ? (
-                <Placeholder />
-              ) : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={makeStackedData(firstHalves)}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                    <YAxis tickFormatter={yFmt} tick={{ fontSize: 11 }} width={55} />
+          {/* Year mode: month by month */}
+          {yearSummary && (
+            <Card>
+              <CardHeader
+                title="Month by month"
+                subtitle="Spending in each half of the month"
+                action={
+                  <div className="flex items-center gap-3 text-xs text-fg-2">
+                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: HALF_COLORS.first }} />1st half</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: HALF_COLORS.second }} />2nd half</span>
+                  </div>
+                }
+              />
+              <div className="px-2 pb-3">
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={yearSummary.byMonth} margin={{ top: 8, right: 16, left: 0, bottom: 0 }} barCategoryGap="28%">
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <YAxis tickFormatter={compact} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={48} />
                     <Tooltip
                       contentStyle={TOOLTIP_STYLE}
+                      cursor={{ fill: 'var(--color-surface-2)' }}
                       formatter={(v, name) => [formatCurrency(Number(v)), name]}
                     />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                    {usedCategories.map(cat => (
-                      <Bar key={cat} dataKey={cat} stackId="a" fill={CHART_COLORS[cat] || CHART_COLORS.Other} />
-                    ))}
+                    <Bar dataKey="firstHalf" name="1st half" stackId="m" fill={HALF_COLORS.first} stroke="var(--color-surface)" strokeWidth={1} />
+                    <Bar dataKey="secondHalf" name="2nd half" stackId="m" fill={HALF_COLORS.second} radius={[4, 4, 0, 0]} stroke="var(--color-surface)" strokeWidth={1} />
                   </BarChart>
                 </ResponsiveContainer>
-              )}
-            </ChartCard>
+              </div>
+            </Card>
+          )}
 
-            <ChartCard title={`2nd-Half by Category (${filterLabel})`}>
-              {secondHalves.length < 2 ? (
-                <Placeholder />
-              ) : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={makeStackedData(secondHalves)}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                    <YAxis tickFormatter={yFmt} tick={{ fontSize: 11 }} width={55} />
-                    <Tooltip
-                      contentStyle={TOOLTIP_STYLE}
-                      formatter={(v, name) => [formatCurrency(Number(v)), name]}
-                    />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                    {usedCategories.map(cat => (
-                      <Bar key={cat} dataKey={cat} stackId="a" fill={CHART_COLORS[cat] || CHART_COLORS.Other} />
+          <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+            {/* Categories */}
+            <Card className="overflow-hidden">
+              <CardHeader
+                title="Categories"
+                subtitle={hasPrevYear ? `Change is per period vs ${year - 1}` : 'Totals for this range, excluding savings'}
+              />
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[520px] text-sm">
+                  <thead>
+                    <tr className="border-y border-line text-left text-[11px] font-medium uppercase tracking-wide text-fg-3">
+                      <th className="px-5 py-2 font-medium">Category</th>
+                      <th className="w-1/3 px-2 py-2 font-medium"><span className="sr-only">Share</span></th>
+                      <th className="px-2 py-2 text-right font-medium">Total</th>
+                      <th className="px-2 py-2 text-right font-medium">Per period</th>
+                      {hasPrevYear && <th className="px-5 py-2 text-right font-medium">Change</th>}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {categories.map((c) => (
+                      <tr key={c.category} className="hover:bg-surface-2/60">
+                        <td className="px-5 py-2.5">
+                          <span className="flex items-center gap-2 text-fg-2">
+                            <CategoryDot category={c.category} />
+                            {c.category}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2.5">
+                          <div className="h-1.5 rounded-full bg-surface-3">
+                            <div
+                              className="h-full rounded-full"
+                              style={{ width: `${(c.total / maxCat) * 100}%`, backgroundColor: categoryColor(c.category) }}
+                            />
+                          </div>
+                        </td>
+                        <td className="num px-2 py-2.5 text-right font-medium text-fg">{formatCurrency(c.total)}</td>
+                        <td className="num px-2 py-2.5 text-right text-fg-2">{formatCurrency(c.perPeriod)}</td>
+                        {hasPrevYear && (
+                          <td className="px-5 py-2.5 text-right">
+                            {c.change === null ? <span className="text-fg-3">–</span> : <ChangeChip change={c.change} />}
+                          </td>
+                        )}
+                      </tr>
                     ))}
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </ChartCard>
-          </div>
+                  </tbody>
+                </table>
+              </div>
+            </Card>
 
-          {/* By Category */}
-          <ChartCard title={`Spending by Category (${filterLabel})`}>
-            <ResponsiveContainer width="100%" height={categoryChartData.length * 36 + 20}>
-              <BarChart data={categoryChartData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis type="number" tickFormatter={yFmt} tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={110} />
-                <Tooltip
-                  contentStyle={TOOLTIP_STYLE}
-                  formatter={(v) => [formatCurrency(Number(v)), 'Total']}
-                />
-                <Bar dataKey="total" radius={[0, 3, 3, 0]}>
-                  {categoryChartData.map((entry) => (
-                    <Cell key={entry.name} fill={CHART_COLORS[entry.name] || CHART_COLORS.Other} />
+            <div className="space-y-5">
+              <Card>
+                <CardHeader title="Biggest expenses" subtitle={`By total · ${rangeLabel.toLowerCase()}`} />
+                <ol className="space-y-3 px-5 pb-4">
+                  {topExpenses.map((t, i) => (
+                    <li key={t.desc} className="flex items-center gap-3 text-sm">
+                      <span className="num w-4 text-xs text-fg-3">{i + 1}</span>
+                      <CategoryDot category={t.category} />
+                      <span className="min-w-0 flex-1 truncate text-fg">{t.desc}</span>
+                      <span className="text-right">
+                        <span className="num block font-medium text-fg">{formatCurrency(t.total)}</span>
+                        <span className="block text-[11px] text-fg-3">{t.count}×</span>
+                      </span>
+                    </li>
                   ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
+                </ol>
+              </Card>
+
+              {yearSummary && yearSummary.newRecurring.length > 0 && (
+                <Card>
+                  <CardHeader title={`New regulars in ${year}`} subtitle="Started this year, seen 3+ times" />
+                  <ul className="flex flex-wrap gap-1.5 px-5 pb-4">
+                    {yearSummary.newRecurring.map((d) => (
+                      <li key={d} className="rounded-md bg-surface-2 px-2 py-1 text-xs text-fg-2">{d}</li>
+                    ))}
+                  </ul>
+                </Card>
+              )}
+            </div>
+          </div>
+
+          {/* 1st vs 2nd half by category */}
+          {firsts.length > 0 && seconds.length > 0 && (
+            <Card>
+              <CardHeader
+                title="1st half vs 2nd half"
+                subtitle="Average spent per period in each category"
+                action={
+                  <div className="flex items-center gap-3 text-xs text-fg-2">
+                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: HALF_COLORS.first }} />1st half</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: HALF_COLORS.second }} />2nd half</span>
+                  </div>
+                }
+              />
+              <div className="px-2 pb-3">
+                <ResponsiveContainer width="100%" height={Math.max(160, halfData.length * 44 + 30)}>
+                  <BarChart data={halfData} layout="vertical" margin={{ top: 0, right: 24, left: 8, bottom: 0 }} barGap={2} barCategoryGap="22%">
+                    <CartesianGrid horizontal={false} />
+                    <XAxis type="number" tickFormatter={compact} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} width={124} />
+                    <Tooltip
+                      contentStyle={TOOLTIP_STYLE}
+                      cursor={{ fill: 'var(--color-surface-2)' }}
+                      formatter={(v, name) => [formatCurrency(Number(v)), name]}
+                    />
+                    <Bar dataKey="first" name="1st half" fill={HALF_COLORS.first} radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="second" name="2nd half" fill={HALF_COLORS.second} radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          )}
         </>
       )}
     </div>
   );
 };
-
-// ── Small helper components ──────────────────────────────────────────────────
-
-const SummaryCard: React.FC<{ label: string; value: string; sub?: string }> = ({ label, value, sub }) => (
-  <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded p-4">
-    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
-    <p className="text-lg font-bold font-mono text-gray-900 dark:text-gray-100">{value}</p>
-    {sub && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{sub}</p>}
-  </div>
-);
-
-const ChartCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded p-4">
-    <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">{title}</h3>
-    {children}
-  </div>
-);
-
-const Placeholder: React.FC = () => (
-  <div className="flex items-center justify-center h-[220px] text-sm text-gray-400 dark:text-gray-500">
-    Need at least 2 periods
-  </div>
-);
