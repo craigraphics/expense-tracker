@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <style>
+    .tile { fill: #18181b } .ink { fill: #ffffff } .ink-line { stroke: #ffffff }
+    @media (prefers-color-scheme: dark) { .tile { fill: #ececef } .ink { fill: #0c0c0e } .ink-line { stroke: #0c0c0e } }
+  </style>
+  <rect class="tile" width="24" height="24" rx="3"/>
+  <rect class="ink" x="5.5" y="6" width="5.75" height="12" rx="1"/>
+  <rect class="ink-line" x="13.25" y="6.75" width="4.5" height="10.5" rx="0.6" fill="none" stroke-width="1.5"/>
+</svg>

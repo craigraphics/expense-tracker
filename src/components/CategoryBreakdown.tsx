@@ -23,9 +23,9 @@ export const CategoryBreakdown: React.FC<{ expenses: Expense[] }> = ({ expenses 
       {rows.length === 0 ? (
         <p className="px-5 pb-5 text-sm text-fg-3">Nothing to break down yet.</p>
       ) : (
-        <div className="px-5 pb-4">
+        <div className="px-5 pb-5">
           {/* Composition strip */}
-          <div className="mb-4 flex h-2 gap-0.5 overflow-hidden rounded-full">
+          <div className="mb-5 flex h-2 gap-0.5 overflow-hidden rounded-xs">
             {rows.map(([cat, value]) => (
               <div
                 key={cat}
@@ -34,7 +34,7 @@ export const CategoryBreakdown: React.FC<{ expenses: Expense[] }> = ({ expenses 
               />
             ))}
           </div>
-          <ul className="space-y-2.5">
+          <ul className="space-y-3">
             {rows.map(([cat, value]) => {
               const pct = (value / spent) * 100;
               return (
@@ -50,7 +50,7 @@ export const CategoryBreakdown: React.FC<{ expenses: Expense[] }> = ({ expenses 
         </div>
       )}
       {savings > 0 && (
-        <div className="flex items-center gap-2.5 border-t border-line px-5 py-3 text-sm">
+        <div className="flex items-center gap-2.5 border-t border-line px-5 py-3.5 text-sm">
           <PiggyBank className="h-4 w-4 text-fg-3" />
           <span className="flex-1 text-fg-2">Set aside to savings</span>
           <span className="num font-medium text-fg">{formatCurrency(savings)}</span>

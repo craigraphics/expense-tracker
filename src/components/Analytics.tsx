@@ -10,7 +10,7 @@ import { formatCurrency } from '../utils/formatCurrency';
 import { categoryColor } from '../utils/chartColors';
 import { summarizeYear, topExpensesOf } from '../utils/yearSummary';
 import { MONTHS } from '../utils/periodFormat';
-import { Card, CardHeader, CategoryDot, IconButton, Segmented } from './ui/primitives';
+import { Card, CardHeader, CategoryDot, IconButton, Segmented, Stat, StatGroup } from './ui/primitives';
 
 type FilterMode = 'year' | 'last6' | 'last12' | 'all';
 
@@ -19,14 +19,15 @@ interface AnalyticsProps {
   loading: boolean;
 }
 
-// Validated pair (light + dark surfaces): 1st half / 2nd half
-const HALF_COLORS = { first: '#7480cf', second: '#c2850c' };
-const LINE_COLOR = '#6b6ff0';
+// 1st half / 2nd half: slate and ochre, clear of the status red/green and readable on both surfaces
+const HALF_COLORS = { first: '#5b7493', second: '#b98a3a' };
+// The trend line is ink, like the rest of the UI chrome
+const LINE_COLOR = 'var(--color-fg-2)';
 
 const TOOLTIP_STYLE: React.CSSProperties = {
   backgroundColor: 'var(--color-surface)',
   border: '1px solid var(--color-line)',
-  borderRadius: 10,
+  borderRadius: 4,
   color: 'var(--color-fg)',
   fontSize: 12,
   boxShadow: 'var(--shadow-pop)',
@@ -49,18 +50,16 @@ const pct = (change: number | null) =>
   change === null ? '–' : `${change > 0 ? '+' : ''}${Math.round(change * 100)}%`;
 
 const KPI: React.FC<{ label: string; value: string; footer?: React.ReactNode }> = ({ label, value, footer }) => (
-  <Card className="flex flex-col gap-1 px-5 py-4">
-    <span className="text-xs font-medium text-fg-3">{label}</span>
-    <span className="num text-2xl font-semibold tracking-tight text-fg">{value}</span>
-    {footer && <span className="mt-auto pt-1 text-xs text-fg-3">{footer}</span>}
-  </Card>
+  <Stat label={label} footer={footer}>
+    <span className="num text-xl font-semibold tracking-tight text-fg sm:text-2xl">{value}</span>
+  </Stat>
 );
 
 const ChangeChip: React.FC<{ change: number | null }> = ({ change }) => {
   if (change === null || Math.abs(change) < 0.005) return null;
   const up = change > 0;
   return (
-    <span className={cn('inline-flex items-center gap-0.5 rounded px-1 py-px text-xs font-medium', up ? 'bg-negative-soft text-negative' : 'bg-positive-soft text-positive')}>
+    <span className={cn('inline-flex items-center gap-0.5 rounded-xs px-1 py-px text-xs font-medium', up ? 'bg-negative-soft text-negative' : 'bg-positive-soft text-positive')}>
       {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
       {pct(change)}
     </span>
@@ -74,12 +73,10 @@ export const Analytics: React.FC<AnalyticsProps> = ({ periods: records, loading 
 
   if (loading) {
     return (
-      <div className="space-y-5" aria-busy="true" aria-label="Loading">
-        <div className="h-9 w-80 animate-pulse rounded-lg bg-surface-2" />
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {[0, 1, 2, 3].map((i) => <div key={i} className="h-[104px] animate-pulse rounded-xl bg-surface-2" />)}
-        </div>
-        <div className="h-72 animate-pulse rounded-xl bg-surface-2" />
+      <div className="space-y-6" aria-busy="true" aria-label="Loading">
+        <div className="h-9 w-80 max-w-full animate-pulse rounded-sm bg-surface-2" />
+        <div className="h-[118px] animate-pulse rounded-md bg-surface-2" />
+        <div className="h-72 animate-pulse rounded-md bg-surface-2" />
       </div>
     );
   }
@@ -155,14 +152,14 @@ export const Analytics: React.FC<AnalyticsProps> = ({ periods: records, loading 
     filterMode === 'year' ? String(year) : filterMode === 'all' ? 'All time' : filterMode === 'last6' ? 'Last 6 months' : 'Last 12 months';
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Title + range */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-fg sm:text-2xl">
             {filterMode === 'year' ? `${year} in review` : 'Analytics'}
           </h1>
-          <p className="text-sm text-fg-3">
+          <p className="mt-0.5 text-sm text-fg-3">
             {fp.length} {fp.length === 1 ? 'period' : 'periods'} tracked · {rangeLabel}
           </p>
         </div>
@@ -196,7 +193,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ periods: records, loading 
       ) : (
         <>
           {/* KPIs */}
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatGroup>
             <KPI
               label="Spent"
               value={formatCurrency(totalSpent)}
@@ -233,7 +230,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ periods: records, loading 
                   : undefined
               }
             />
-          </div>
+          </StatGroup>
 
           {/* Spending over time */}
           <Card>
@@ -253,7 +250,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ periods: records, loading 
                 <AreaChart data={timeline} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="spentFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={LINE_COLOR} stopOpacity={0.28} />
+                      <stop offset="0%" stopColor={LINE_COLOR} stopOpacity={0.16} />
                       <stop offset="100%" stopColor={LINE_COLOR} stopOpacity={0} />
                     </linearGradient>
                   </defs>
@@ -289,8 +286,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ periods: records, loading 
                 subtitle="Spending in each half of the month"
                 action={
                   <div className="flex items-center gap-3 text-xs text-fg-2">
-                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: HALF_COLORS.first }} />1st half</span>
-                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: HALF_COLORS.second }} />2nd half</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-xs" style={{ background: HALF_COLORS.first }} />1st half</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-xs" style={{ background: HALF_COLORS.second }} />2nd half</span>
                   </div>
                 }
               />
@@ -306,14 +303,14 @@ export const Analytics: React.FC<AnalyticsProps> = ({ periods: records, loading 
                       formatter={(v, name) => [formatCurrency(Number(v)), name]}
                     />
                     <Bar dataKey="firstHalf" name="1st half" stackId="m" fill={HALF_COLORS.first} stroke="var(--color-surface)" strokeWidth={1} />
-                    <Bar dataKey="secondHalf" name="2nd half" stackId="m" fill={HALF_COLORS.second} radius={[4, 4, 0, 0]} stroke="var(--color-surface)" strokeWidth={1} />
+                    <Bar dataKey="secondHalf" name="2nd half" stackId="m" fill={HALF_COLORS.second} radius={[2, 2, 0, 0]} stroke="var(--color-surface)" strokeWidth={1} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </Card>
           )}
 
-          <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
             {/* Categories */}
             <Card className="overflow-hidden">
               <CardHeader
@@ -334,24 +331,24 @@ export const Analytics: React.FC<AnalyticsProps> = ({ periods: records, loading 
                   <tbody className="divide-y divide-line">
                     {categories.map((c) => (
                       <tr key={c.category} className="hover:bg-surface-2/60">
-                        <td className="px-5 py-2.5">
+                        <td className="px-5 py-3">
                           <span className="flex items-center gap-2 text-fg-2">
                             <CategoryDot category={c.category} />
                             {c.category}
                           </span>
                         </td>
-                        <td className="px-2 py-2.5">
-                          <div className="h-1.5 rounded-full bg-surface-3">
+                        <td className="px-2 py-3">
+                          <div className="h-1.5 rounded-xs bg-surface-3">
                             <div
-                              className="h-full rounded-full"
+                              className="h-full rounded-xs"
                               style={{ width: `${(c.total / maxCat) * 100}%`, backgroundColor: categoryColor(c.category) }}
                             />
                           </div>
                         </td>
-                        <td className="num px-2 py-2.5 text-right font-medium text-fg">{formatCurrency(c.total)}</td>
-                        <td className="num px-2 py-2.5 text-right text-fg-2">{formatCurrency(c.perPeriod)}</td>
+                        <td className="num px-2 py-3 text-right font-medium text-fg">{formatCurrency(c.total)}</td>
+                        <td className="num px-2 py-3 text-right text-fg-2">{formatCurrency(c.perPeriod)}</td>
                         {hasPrevYear && (
-                          <td className="px-5 py-2.5 text-right">
+                          <td className="px-5 py-3 text-right">
                             {c.change === null ? <span className="text-fg-3">–</span> : <ChangeChip change={c.change} />}
                           </td>
                         )}
@@ -362,10 +359,10 @@ export const Analytics: React.FC<AnalyticsProps> = ({ periods: records, loading 
               </div>
             </Card>
 
-            <div className="space-y-5">
+            <div className="space-y-6">
               <Card>
                 <CardHeader title="Biggest expenses" subtitle={`By total · ${rangeLabel.toLowerCase()}`} />
-                <ol className="space-y-3 px-5 pb-4">
+                <ol className="space-y-3.5 px-5 pb-5">
                   {topExpenses.map((t, i) => (
                     <li key={t.desc} className="flex items-center gap-3 text-sm">
                       <span className="num w-4 text-xs text-fg-3">{i + 1}</span>
@@ -383,9 +380,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({ periods: records, loading 
               {yearSummary && yearSummary.newRecurring.length > 0 && (
                 <Card>
                   <CardHeader title={`New regulars in ${year}`} subtitle="Started this year, seen 3+ times" />
-                  <ul className="flex flex-wrap gap-1.5 px-5 pb-4">
+                  <ul className="flex flex-wrap gap-1.5 px-5 pb-5">
                     {yearSummary.newRecurring.map((d) => (
-                      <li key={d} className="rounded-md bg-surface-2 px-2 py-1 text-xs text-fg-2">{d}</li>
+                      <li key={d} className="rounded-xs bg-surface-2 px-2 py-1 text-xs text-fg-2">{d}</li>
                     ))}
                   </ul>
                 </Card>
@@ -401,8 +398,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ periods: records, loading 
                 subtitle="Average spent per period in each category"
                 action={
                   <div className="flex items-center gap-3 text-xs text-fg-2">
-                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: HALF_COLORS.first }} />1st half</span>
-                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: HALF_COLORS.second }} />2nd half</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-xs" style={{ background: HALF_COLORS.first }} />1st half</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-xs" style={{ background: HALF_COLORS.second }} />2nd half</span>
                   </div>
                 }
               />
@@ -417,8 +414,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ periods: records, loading 
                       cursor={{ fill: 'var(--color-surface-2)' }}
                       formatter={(v, name) => [formatCurrency(Number(v)), name]}
                     />
-                    <Bar dataKey="first" name="1st half" fill={HALF_COLORS.first} radius={[0, 4, 4, 0]} />
-                    <Bar dataKey="second" name="2nd half" fill={HALF_COLORS.second} radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="first" name="1st half" fill={HALF_COLORS.first} radius={[0, 2, 2, 0]} />
+                    <Bar dataKey="second" name="2nd half" fill={HALF_COLORS.second} radius={[0, 2, 2, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

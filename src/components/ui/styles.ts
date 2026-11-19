@@ -1,7 +1,7 @@
 import { cn } from '@/utils/cn';
 
 export const inputClass =
-  'h-9 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-fg placeholder:text-fg-3 transition-colors hover:border-fg-3/50 focus:border-accent focus:outline-none focus:ring-3 focus:ring-accent/20';
+  'h-9 w-full rounded-sm border border-line-strong bg-surface px-3 text-sm text-fg placeholder:text-fg-3 transition-colors hover:border-fg-3/50 focus:border-fg-3 focus:outline-none focus:ring-2 focus:ring-accent/15';
 
 export const selectClass = cn(
   inputClass,

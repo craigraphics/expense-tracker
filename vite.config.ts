@@ -20,8 +20,8 @@ export default defineConfig({
         name: 'Expense Tracker',
         short_name: 'Expenses',
         description: 'Track your expenses by half-month periods',
-        theme_color: '#1f2937',
-        background_color: '#111827',
+        theme_color: '#0c0c0e',
+        background_color: '#0c0c0e',
         display: 'standalone',
         icons: [
           {
@@ -33,6 +33,13 @@ export default defineConfig({
             src: '/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
+          },
+          {
+            // Full-bleed tile with the mark inside the maskable safe zone, for adaptive icons
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
           },
         ],
       },

@@ -36,7 +36,7 @@ export const PeriodTimeline: React.FC<PeriodTimelineProps> = ({
   }, [selectedPeriodId, selectedYear]);
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-4">
       <div className="flex shrink-0 items-center gap-0.5">
         <IconButton label="Previous year" disabled={selectedYear <= yearRange[0]} onClick={() => onYearChange(selectedYear - 1)}>
           <ChevronLeft />
@@ -47,12 +47,12 @@ export const PeriodTimeline: React.FC<PeriodTimelineProps> = ({
         </IconButton>
       </div>
 
-      <div data-strip className="relative -mx-1 flex-1 overflow-x-auto px-1 pb-1">
+      <div data-strip className="relative -mx-1 flex-1 overflow-x-auto px-1 pb-2">
         <div className="grid min-w-[640px] grid-cols-12 gap-1.5">
           {MONTHS.map((label, i) => {
             const month = i + 1;
             return (
-              <div key={label} className="flex flex-col gap-1">
+              <div key={label} className="flex flex-col gap-1.5">
                 <span className="text-center text-[11px] font-medium uppercase tracking-wide text-fg-3">{label}</span>
                 <div className="flex gap-0.5">
                   {[1, 2].map((half) => {
@@ -70,17 +70,17 @@ export const PeriodTimeline: React.FC<PeriodTimelineProps> = ({
                         aria-label={`${label} ${half === 1 ? '1st' : '2nd'} half${exists ? '' : ' (not set up)'}${isToday ? ', current period' : ''}`}
                         title={`${periodDateRange(id)}${exists ? '' : ' · not set up'}`}
                         className={cn(
-                          'relative h-7 flex-1 rounded-md text-[11px] font-semibold transition-colors',
+                          'relative h-7 flex-1 rounded-xs text-[11px] font-semibold transition-colors',
                           selected
-                            ? 'bg-accent text-white shadow-sm'
+                            ? 'bg-accent text-on-accent'
                             : exists
-                              ? 'bg-surface-3 text-fg-2 hover:bg-accent-soft hover:text-accent-fg'
-                              : 'border border-dashed border-line-strong text-fg-3 hover:border-accent hover:text-accent-fg'
+                              ? 'bg-surface-3 text-fg-2 hover:bg-line-strong hover:text-fg'
+                              : 'border border-dashed border-line-strong text-fg-3 hover:border-fg-3 hover:text-fg'
                         )}
                       >
                         {half}
                         {isToday && !selected && (
-                          <span className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-accent" />
+                          <span className="absolute -bottom-1.5 left-1/2 h-0.5 w-3 -translate-x-1/2 rounded-xs bg-accent" />
                         )}
                       </button>
                     );

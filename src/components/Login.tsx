@@ -3,7 +3,8 @@ import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from '../firebase';
 import { isEmailAllowed } from '../config/auth';
 import { useToast } from '../hooks/use-toast';
-import { Lock, Wallet } from 'lucide-react';
+import { Lock } from 'lucide-react';
+import { Logo } from './ui/Logo';
 
 interface LoginProps {
   onLogin: () => void;
@@ -62,18 +63,16 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#7b7ff4] to-[#4b4fc4] text-white shadow-lg shadow-accent/20">
-            <Wallet className="h-6 w-6" />
-          </span>
+          <Logo size={44} />
           <h1 className="mt-5 text-2xl font-semibold tracking-tight text-fg">Expense Tracker</h1>
           <p className="mt-1.5 text-sm text-fg-3">Plan every half-month at a glance.</p>
         </div>
 
-        <div className="rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)]">
+        <div className="rounded-md border border-line bg-surface p-6 shadow-[var(--shadow-card)]">
           <button
             onClick={signInWithGoogle}
             disabled={loading}
-            className="flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-line-strong bg-surface text-sm font-medium text-fg transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-11 w-full items-center justify-center gap-3 rounded-sm border border-line-strong bg-surface text-sm font-medium text-fg transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

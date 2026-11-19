@@ -1,6 +1,6 @@
 import React, { useState, useSyncExternalStore } from 'react';
 import { doc } from "firebase/firestore";
-import { CalendarPlus, ChevronLeft, ChevronRight, Download, Plus, Sparkles, Trash2 } from 'lucide-react';
+import { CalendarPlus, ChevronLeft, ChevronRight, Download, Plus, Repeat, Trash2 } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { setDoc, deleteDoc, READ_ONLY, isReadOnlyError } from '../firestoreWrites';
 import {
@@ -280,11 +280,11 @@ export const Dashboard: React.FC = () => {
         </div>
       )}
 
-      <main className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6">
+      <main className="mx-auto max-w-6xl px-4 pb-20 pt-6 sm:px-6 sm:pt-8">
         {currentView === 'analytics' ? (
           <Analytics periods={periods} loading={periodsLoading} />
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-6">
             {/* Period header */}
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -297,15 +297,16 @@ export const Dashboard: React.FC = () => {
                   </IconButton>
                 </div>
                 <div>
-                  <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-fg sm:text-2xl">
+                  <h1 className="flex items-center gap-2.5 text-xl font-semibold tracking-tight text-fg sm:text-2xl">
                     {periodTitle(selectedPeriodId)}
                     {isCurrentPeriod && (
-                      <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-accent-fg">
+                      <span className="inline-flex items-center gap-1.5 rounded-xs border border-line-strong px-1.5 py-px text-[10px] font-semibold uppercase tracking-wider text-fg-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-fg" />
                         Current
                       </span>
                     )}
                   </h1>
-                  <p className="text-sm text-fg-3">{periodDateRange(selectedPeriodId)}</p>
+                  <p className="mt-0.5 text-sm text-fg-3">{periodDateRange(selectedPeriodId)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -319,7 +320,7 @@ export const Dashboard: React.FC = () => {
                     </IconButton>
                   </>
                 )}
-                <Button variant="primary" className="ml-2" onClick={openNewPeriod}>
+                <Button variant="primary" className="ml-3" onClick={openNewPeriod}>
                   <Plus className="h-4 w-4" />
                   New period
                 </Button>
@@ -338,24 +339,22 @@ export const Dashboard: React.FC = () => {
             </Card>
 
             {periodsLoading ? (
-              <div className="space-y-5" aria-busy="true" aria-label="Loading">
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                  {[0, 1, 2, 3].map(i => <div key={i} className="h-[104px] animate-pulse rounded-xl bg-surface-2" />)}
-                </div>
-                <div className="h-96 animate-pulse rounded-xl bg-surface-2" />
+              <div className="space-y-6" aria-busy="true" aria-label="Loading">
+                <div className="h-[118px] animate-pulse rounded-md bg-surface-2" />
+                <div className="h-96 animate-pulse rounded-md bg-surface-2" />
               </div>
             ) : !periodExists ? (
               <Card className="flex flex-col items-center px-6 py-16 text-center">
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent-fg">
-                  <CalendarPlus className="h-6 w-6" />
+                <span className="flex h-11 w-11 items-center justify-center rounded-sm border border-line-strong text-fg-2">
+                  <CalendarPlus className="h-5 w-5" />
                 </span>
-                <h2 className="mt-4 text-lg font-semibold text-fg">This period isn't set up yet</h2>
-                <p className="mt-1 max-w-md text-sm text-fg-3">
+                <h2 className="mt-5 text-lg font-semibold text-fg">This period isn't set up yet</h2>
+                <p className="mt-1.5 max-w-md text-sm text-fg-3">
                   Start {formatPeriodWithYear(selectedPeriodId)} from your usual expenses. We'll suggest them from your
                   history, and you review everything before it's saved.
                 </p>
                 <Button variant="primary" className="mt-6" onClick={() => setNewPeriodTarget(selectedPeriodId)}>
-                  <Sparkles className="h-4 w-4" />
+                  <Repeat className="h-4 w-4" />
                   Set up with predictions
                 </Button>
               </Card>
@@ -374,7 +373,7 @@ export const Dashboard: React.FC = () => {
                   count={data.expenses.length}
                 />
 
-                <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                   <ExpenseList
                     key={selectedPeriodId}
                     expenses={data.expenses}
